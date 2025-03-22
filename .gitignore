@@ -1,0 +1,21 @@
+# Binaries
+**/bin/
+bin-int/
+!vendor/bin/premake/
+**/cache/**
+**/Cache/**
+obj/
+Intermediates/
+Binaries
+__pycache__
+
+# Visual Studio files and folder
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+
+# LFS Folders
+lfs/
+hooks/
