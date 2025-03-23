@@ -7,11 +7,10 @@ extern Zenith::Application* Zenith::CreateApplication();
 
   int main(int argc, char** argv)
   {
-
-      Zenith::InitializeCore();
-      Zenith::Application* app = Zenith::CreateApplication();
-      ZN_CORE_ASSERT(app, "Client Application is null!");
-      app->Run();
-      delete app;
-      Zenith::ShutdownCore();
+    Zenith::InitializeCore();
+    Zenith::Application* app = Zenith::CreateApplication();
+    ZN_CORE_ASSERT(app, "Client Application is null!");
+    app->Run();
+    delete app;
+    Zenith::ShutdownCore();
   }

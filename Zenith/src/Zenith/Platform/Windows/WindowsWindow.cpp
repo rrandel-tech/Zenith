@@ -6,6 +6,8 @@
 #include "Zenith/Core/Events/KeyEvent.hpp"
 #include "Zenith/Core/Events/MouseEvent.hpp"
 
+#include <imgui.h>
+
 namespace Zenith {
 
   static void GLFWErrorCallback(int error, const char* description)
