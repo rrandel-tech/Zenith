@@ -5,7 +5,13 @@ function firstToUpper(str)
 	return (str:gsub("^%l", string.upper))
 end
 
-Dependencies = {}
+Dependencies = {
+	GLFW = {
+		-- No need to specify LibDir for GLFW since it's automatically handled by premake
+		LibName = "GLFW",
+		IncludeDir = "%{wks.location}/Zenith/vendor/GLFW/include",
+	},
+}
 
 function LinkDependency(table, is_debug, target)
 

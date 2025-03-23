@@ -1,57 +1,57 @@
 project "Sandbox"
-    kind "ConsoleApp"
+  kind "ConsoleApp"
 
-	targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
+  targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
+  objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
 
-	links { "Zenith" }
+  links { "Zenith" }
 
-	defines { "GLM_FORCE_DEPTH_ZERO_TO_ONE", }
+  defines { "GLM_FORCE_DEPTH_ZERO_TO_ONE", }
 
-	files  { 
-		"src/**.h",
-		"src/**.c",
-		"src/**.hpp",
-		"src/**.cpp"
-	}
+  files  { 
+    "src/**.h",
+    "src/**.c",
+    "src/**.hpp",
+    "src/**.cpp"
+  }
 
-	includedirs  {
-		"src/",
+  includedirs  {
+    "src/",
 
-		"../Zenith/src/",
-		"../Zenith/vendor/"
-	}
+    "../Zenith/src/",
+    "../Zenith/vendor/"
+  }
 
-	filter "system:windows"
-		systemversion "latest"
-		defines { "ZN_PLATFORM_WINDOWS" }
+  filter "system:windows"
+    systemversion "latest"
+    defines { "ZN_PLATFORM_WINDOWS" }
 
-	filter "system:linux"
-		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID" }
-		links { "dw", "dl", "unwind", "pthread" }
+  filter "system:linux"
+    defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID" }
+    links { "dw", "dl", "unwind", "pthread" }
 
-		result, err = os.outputof("pkg-config --libs gtk+-3.0")
-		linkoptions { result }
+    result, err = os.outputof("pkg-config --libs gtk+-3.0")
+    linkoptions { result }
 
-	filter "configurations:Debug or configurations:Debug-AS"
-		symbols "On"
-		defines { "ZN_DEBUG" }
+  filter "configurations:Debug or configurations:Debug-AS"
+    symbols "On"
+    defines { "ZN_DEBUG" }
 
-        ProcessDependencies("Debug")
+    ProcessDependencies("Debug")
 
-	filter { "system:windows", "configurations:Debug-AS" }
-		sanitize { "Address" }
-		flags { "NoRuntimeChecks", "NoIncrementalLink" }
+  filter { "system:windows", "configurations:Debug-AS" }
+    sanitize { "Address" }
+    flags { "NoRuntimeChecks", "NoIncrementalLink" }
 
-	filter "configurations:Release"
-		optimize "On"
-        vectorextensions "AVX2"
-        isaextensions { "BMI", "POPCNT", "LZCNT", "F16C" }
-		defines { "ZN_RELEASE" }
+  filter "configurations:Release"
+    optimize "On"
+    vectorextensions "AVX2"
+    isaextensions { "BMI", "POPCNT", "LZCNT", "F16C" }
+    defines { "ZN_RELEASE" }
 
-        ProcessDependencies("Release")
+    ProcessDependencies("Release")
 
-    filter "configurations:Dist"
-        ProcessDependencies("Release")
+  filter "configurations:Dist"
+    ProcessDependencies("Release")
 
-		defines { "ZN_DIST" }
+    defines { "ZN_DIST" }
