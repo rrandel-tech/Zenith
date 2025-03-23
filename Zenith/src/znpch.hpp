@@ -33,3 +33,4 @@
 #include <Zenith/Core/Assert.hpp>
 #include <Zenith/Core/Base.hpp>
 #include <Zenith/Core/Log.hpp>
+#include <Zenith/Core/Events/Event.hpp>
