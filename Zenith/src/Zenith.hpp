@@ -22,4 +22,7 @@
 
 #include "imgui.h"
 
+// === Zenith Renderer API ===========================
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/Buffer.hpp"
+// ===================================================

@@ -19,6 +19,8 @@ namespace Zenith {
 
     m_ImGuiLayer = new ImGuiLayer("ImGui");
     PushOverlay(m_ImGuiLayer);
+
+    Renderer::Init();
   }
 
   Application::~Application()
