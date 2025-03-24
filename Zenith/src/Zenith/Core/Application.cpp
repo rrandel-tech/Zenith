@@ -1,7 +1,7 @@
 #include "znpch.hpp"
 #include "Application.hpp"
 
-#include <glad/glad.h>
+#include "Zenith/Renderer/Renderer.hpp"
 #include <GLFW/glfw3.h>
 
 namespace Zenith {
@@ -16,6 +16,9 @@ namespace Zenith {
 
     m_Window = std::unique_ptr<Window>(Window::Create());
     m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+
+    m_ImGuiLayer = new ImGuiLayer("ImGui");
+    PushOverlay(m_ImGuiLayer);
   }
 
   Application::~Application()
@@ -33,16 +36,28 @@ namespace Zenith {
     layer->OnAttach();
   }
 
+  void Application::RenderImGui()
+  {
+    m_ImGuiLayer->Begin();
+    for (Layer* layer : m_LayerStack)
+      layer->OnImGuiRender();
+
+    m_ImGuiLayer->End();
+  }
+
   void Application::Run()
   {
     OnInit();
     while (m_Running)
     {
-      glClearColor(0.5, 0, 0, 1);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
       for (Layer* layer : m_LayerStack)
         layer->OnUpdate();
+
+      // Render ImGui on render thread
+      Application* app = this;
+      ZN_RENDER_1(app, { app->RenderImGui(); });
+
+      Renderer::Get().WaitAndRender();
 
       m_Window->OnUpdate();
     }

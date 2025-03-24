@@ -61,16 +61,15 @@ namespace Zenith {
     ImGui::DestroyContext();
   }
 
-  void ImGuiLayer::OnUpdate()
+  void ImGuiLayer::Begin()
   {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+  }
 
-    static bool show_demo_window = true;
-    if (show_demo_window)
-      ImGui::ShowDemoWindow(&show_demo_window);
-
+  void ImGuiLayer::End()
+  {
     ImGuiIO& io = ImGui::GetIO();
     Application& app = Application::Get();
     io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
@@ -87,5 +86,8 @@ namespace Zenith {
       glfwMakeContextCurrent(backup_current_context);
     }
   }
+
+  void ImGuiLayer::OnImGuiRender()
+  {}
 
 }

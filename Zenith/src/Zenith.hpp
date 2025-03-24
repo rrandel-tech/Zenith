@@ -19,3 +19,7 @@
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
 #include "Zenith/Core/Events/KeyEvent.hpp"
 #include "Zenith/Core/Events/MouseEvent.hpp"
+
+#include "imgui.h"
+
+#include "Zenith/Renderer/Renderer.hpp"
