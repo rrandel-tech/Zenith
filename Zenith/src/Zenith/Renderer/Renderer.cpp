@@ -9,11 +9,15 @@ namespace Zenith {
   {}
 
   void Renderer::Clear()
-  {}
+  {
+    Renderer::Submit([]() {
+      RendererAPI::Clear(0.0f, 0.0f, 0.0f, 1.0f);
+    });
+  }
 
   void Renderer::Clear(float r, float g, float b, float a)
   {
-    ZN_RENDER_4(r, g, b, a, {
+    Renderer::Submit([=]() {
       RendererAPI::Clear(r, g, b, a);
     });
   }

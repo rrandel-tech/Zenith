@@ -19,9 +19,20 @@ namespace Zenith {
 
     void Init();
 
-    static void* Submit(RenderCommandFn fn, unsigned int size)
+    template<typename FuncT>
+    static void Submit(FuncT&& func)
     {
-      return s_Instance->m_CommandQueue.Allocate(fn, size);
+      auto renderCmd = [](void* ptr) {
+        auto pFunc = (FuncT*)ptr;
+        (*pFunc)();
+
+        // NOTE: Instead of destroying we could try and enforce all items to be trivally destructible
+        // however some items like uniforms which contain std::strings still exist for now
+        // static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
+        pFunc->~FuncT();
+        };
+      auto storageBuffer = s_Instance->m_CommandQueue.Allocate(renderCmd, sizeof(func));
+      new (storageBuffer) FuncT(std::forward<FuncT>(func));
     }
 
     void WaitAndRender();

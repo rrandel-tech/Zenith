@@ -55,7 +55,7 @@ namespace Zenith {
 
       // Render ImGui on render thread
       Application* app = this;
-      ZN_RENDER_1(app, { app->RenderImGui(); });
+      Renderer::Submit([app]() {app->RenderImGui();});
 
       Renderer::Get().WaitAndRender();
 
