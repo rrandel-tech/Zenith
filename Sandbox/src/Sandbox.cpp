@@ -3,11 +3,14 @@
 
 #include "Zenith/ImGui/ImGuiLayer.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 class TestLayer : public Zenith::Layer
 {
 public:
   TestLayer()
-    : m_ClearColor{ 0.2f, 0.3f, 0.8f, 1.0f }
+    : m_ClearColor{ 0.2f, 0.3f, 0.8f, 1.0f }, m_TriangleColor{ 0.8f, 0.2f, 0.3f, 1.0f }
   {}
 
   virtual ~TestLayer()
@@ -42,6 +45,10 @@ public:
     using namespace Zenith;
     Renderer::Clear(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], m_ClearColor[3]);
 
+    Zenith::UniformBufferDeclaration<sizeof(glm::vec4), 1> buffer;
+    buffer.Push("u_Color", m_TriangleColor);
+    m_Shader->UploadUniformBuffer(buffer);
+
     m_Shader->Bind();
     m_VB->Bind();
     m_IB->Bind();
@@ -52,6 +59,7 @@ public:
   {
     ImGui::Begin("Settings");
     ImGui::ColorEdit4("Clear Color", m_ClearColor);
+    ImGui::ColorEdit4("Triangle Color", glm::value_ptr(m_TriangleColor));
     ImGui::End();
   }
 
@@ -62,6 +70,7 @@ private:
   std::unique_ptr<Zenith::IndexBuffer> m_IB;
   std::unique_ptr<Zenith::Shader> m_Shader;
   float m_ClearColor[4];
+  glm::vec4 m_TriangleColor;
 };
 
 class Sandbox : public Zenith::Application
