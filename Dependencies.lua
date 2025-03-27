@@ -22,6 +22,15 @@ Dependencies = {
   GLM = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/glm",
 	},
+  Assimp = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/assimp/include",
+		Windows = { LibName = "assimp-vc143-mt", DebugLibName = "assimp-vc143-mtd", LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/windows/%{cfg.buildcfg}/" },
+		Linux = { LibName = "assimp", LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/linux/" },
+		Configurations = "Debug,Release"
+	},
+  STB = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/stb/include",
+	},
 }
 
 function LinkDependency(table, is_debug, target)

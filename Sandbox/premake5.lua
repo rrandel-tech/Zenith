@@ -26,6 +26,16 @@ project "Sandbox"
     systemversion "latest"
     defines { "ZN_PLATFORM_WINDOWS" }
 
+  filter { "system:windows", "configurations:Debug or configurations:Debug-AS" }
+		postbuildcommands {
+			'{COPY} "../Zenith/vendor/assimp/bin/windows/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
+		}
+
+	filter { "system:windows", "configurations:Release or configurations:Dist" }
+		postbuildcommands {
+			'{COPY} "../Zenith/vendor/assimp/bin/windows/Release/assimp-vc143-mt.dll" "%{cfg.targetdir}"',
+		}
+
   filter "system:linux"
     defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID" }
     links { "dw", "dl", "unwind", "pthread" }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Event.hpp"
+#include "Zenith/Core/KeyCodes.hpp"
 
 #include <sstream>
 

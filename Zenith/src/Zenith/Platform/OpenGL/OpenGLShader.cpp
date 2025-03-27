@@ -1,15 +1,33 @@
 #include "znpch.hpp"
 #include "OpenGLShader.hpp"
 
+#include <string>
 #include <sstream>
 #include <limits>
 
 namespace Zenith {
 
+#define UNIFORM_LOGGING 0
+#if UNIFORM_LOGGING
+  #define ZN_LOG_UNIFORM(...) ZN_CORE_WARN(__VA_ARGS__)
+#else
+  #define ZN_LOG_UNIFORM
+#endif
+
   OpenGLShader::OpenGLShader(const std::string& filepath)
+    : m_AssetPath(filepath)
   {
-    ReadShaderFromFile(filepath);
+    size_t found = filepath.find_last_of("/\\");
+    m_Name = found != std::string::npos ? filepath.substr(found + 1) : filepath;
+    Reload();
+  }
+
+  void OpenGLShader::Reload()
+  {
+    ReadShaderFromFile(m_AssetPath);
     Renderer::Submit([=](){
+      if (m_RendererID)
+        glDeleteShader(m_RendererID);
       CompileAndUploadShader();
     });
   }
@@ -133,6 +151,20 @@ namespace Zenith {
       glDetachShader(program, id);
 
     m_RendererID = program;
+
+    // Bind default texture unit
+    UploadUniformInt("u_Texture", 0);
+
+    // PBR shader textures
+    UploadUniformInt("u_AlbedoTexture", 1);
+    UploadUniformInt("u_NormalTexture", 2);
+    UploadUniformInt("u_MetalnessTexture", 3);
+    UploadUniformInt("u_RoughnessTexture", 4);
+
+    UploadUniformInt("u_EnvRadianceTex", 10);
+    UploadUniformInt("u_EnvIrradianceTex", 11);
+
+    UploadUniformInt("u_BRDFLUTTexture", 15);
   }
 
   void OpenGLShader::UploadUniformBuffer(const UniformBufferBase& uniformBuffer)
@@ -150,6 +182,14 @@ namespace Zenith {
           UploadUniformFloat(name, value);
         });
       }
+      case UniformType::Float3:
+      {
+        const std::string& name = decl.Name;
+        glm::vec3& values = *(glm::vec3*)(uniformBuffer.GetBuffer() + decl.Offset);
+        Renderer::Submit([=](){
+          UploadUniformFloat3(name, values);
+        });
+      }
       case UniformType::Float4:
       {
         const std::string& name = decl.Name;
@@ -158,20 +198,80 @@ namespace Zenith {
           UploadUniformFloat4(name, values);
         });
       }
+      case UniformType::Matrix4x4:
+      {
+        const std::string& name = decl.Name;
+        glm::mat4& values = *(glm::mat4*)(uniformBuffer.GetBuffer() + decl.Offset);
+        Renderer::Submit([=](){
+          UploadUniformMat4(name, values);
+        });
+      }
       }
     }
+  }
+
+  void OpenGLShader::SetFloat(const std::string& name, float value)
+  {
+    Renderer::Submit([=](){
+      UploadUniformFloat(name, value);
+    });
+  }
+
+  void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
+  {
+    Renderer::Submit([=](){
+      UploadUniformMat4(name, value);
+    });
+  }
+
+  void OpenGLShader::UploadUniformInt(const std::string& name, int value)
+  {
+    glUseProgram(m_RendererID);
+    auto location = glGetUniformLocation(m_RendererID, name.c_str());
+    if (location != -1)
+      glUniform1i(location, value);
+    else
+      ZN_LOG_UNIFORM("Uniform '{0}' not found!", name);
   }
 
   void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
   {
     glUseProgram(m_RendererID);
-    glUniform1f(glGetUniformLocation(m_RendererID, name.c_str()), value);
+    auto location = glGetUniformLocation(m_RendererID, name.c_str());
+    if (location != -1)
+      glUniform1f(location, value);
+    else
+      ZN_LOG_UNIFORM("Uniform '{0}' not found!", name);
+  }
+
+  void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
+  {
+    glUseProgram(m_RendererID);
+    auto location = glGetUniformLocation(m_RendererID, name.c_str());
+    if (location != -1)
+      glUniform3f(location, values.x, values.y, values.z);
+    else
+      ZN_LOG_UNIFORM("Uniform '{0}' not found!", name);
   }
 
   void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
   {
     glUseProgram(m_RendererID);
-    glUniform4f(glGetUniformLocation(m_RendererID, name.c_str()), values.x, values.y, values.z, values.w);
+    auto location = glGetUniformLocation(m_RendererID, name.c_str());
+    if (location != -1)
+      glUniform4f(location, values.x, values.y, values.z, values.w);
+    else
+      ZN_LOG_UNIFORM("Uniform '{0}' not found!", name);
+  }
+
+  void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& values)
+  {
+    glUseProgram(m_RendererID);
+    auto location = glGetUniformLocation(m_RendererID, name.c_str());
+    if (location != -1)
+      glUniformMatrix4fv(location, 1, GL_FALSE, (const float*)&values);
+    else
+      ZN_LOG_UNIFORM("Uniform '{0}' not found!", name);
   }
 
 }
