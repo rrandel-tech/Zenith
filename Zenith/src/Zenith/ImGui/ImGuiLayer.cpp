@@ -2,6 +2,7 @@
 #include "ImGuiLayer.hpp"
 
 #include "imgui.h"
+#include "ImGuizmo.hpp"
 
 #define IMGUI_IMPL_API
 #include "backends/imgui_impl_glfw.h"
@@ -67,6 +68,7 @@ namespace Zenith {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
   }
 
   void ImGuiLayer::End()

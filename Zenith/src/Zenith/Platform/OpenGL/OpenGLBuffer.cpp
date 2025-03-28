@@ -9,11 +9,34 @@ namespace Zenith {
   // VertexBuffer
   //////////////////////////////////////////////////////////////////////////////////
 
-  OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
-    : m_RendererID(0), m_Size(size)
+  static GLenum OpenGLUsage(VertexBufferUsage usage)
+  {
+    switch (usage)
+    {
+    case VertexBufferUsage::Static:    return GL_STATIC_DRAW;
+    case VertexBufferUsage::Dynamic:   return GL_DYNAMIC_DRAW;
+    }
+    ZN_CORE_ASSERT(false, "Unknown vertex buffer usage");
+    return 0;
+  }
+
+  OpenGLVertexBuffer::OpenGLVertexBuffer(void* data, uint32_t size, VertexBufferUsage usage)
+    : m_Size(size), m_Usage(usage)
+  {
+    m_LocalData = Buffer::Copy(data, size);
+
+    Renderer::Submit([=](){
+      glCreateBuffers(1, &m_RendererID);
+      glNamedBufferData(m_RendererID, m_Size, m_LocalData.Data, OpenGLUsage(m_Usage));
+    });
+  }
+
+  OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size, VertexBufferUsage usage)
+    : m_Size(size), m_Usage(usage)
   {
     Renderer::Submit([=](){
-      glGenBuffers(1, &m_RendererID);
+      glCreateBuffers(1, &m_RendererID);
+      glNamedBufferData(m_RendererID, m_Size, nullptr, OpenGLUsage(m_Usage));
     });
   }
 
@@ -24,12 +47,12 @@ namespace Zenith {
     });
   }
 
-  void OpenGLVertexBuffer::SetData(void* buffer, uint32_t size, uint32_t offset)
+  void OpenGLVertexBuffer::SetData(void* data, uint32_t size, uint32_t offset)
   {
+    m_LocalData = Buffer::Copy(data, size);
     m_Size = size;
     Renderer::Submit([=](){
-      glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-      glBufferData(GL_ARRAY_BUFFER, size, buffer, GL_STATIC_DRAW);
+      glNamedBufferSubData(m_RendererID, offset, m_Size, m_LocalData.Data);
     });
   }
 
@@ -37,13 +60,6 @@ namespace Zenith {
   {
     Renderer::Submit([=](){
       glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-
-      // TODO: Extremely temp, by default provide positions and texcoord attributes
-      glEnableVertexAttribArray(0);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
-
-      glEnableVertexAttribArray(1);
-      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (const void*)(3 * sizeof(float)));
     });
   }
 
@@ -51,11 +67,14 @@ namespace Zenith {
   // IndexBuffer
   //////////////////////////////////////////////////////////////////////////////////
 
-  OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t size)
+  OpenGLIndexBuffer::OpenGLIndexBuffer(void* data, uint32_t size)
     : m_RendererID(0), m_Size(size)
   {
+    m_LocalData = Buffer::Copy(data, size);
+
     Renderer::Submit([=](){
-      glGenBuffers(1, &m_RendererID);
+      glCreateBuffers(1, &m_RendererID);
+      glNamedBufferData(m_RendererID, m_Size, m_LocalData.Data, GL_STATIC_DRAW);
     });
   }
 
@@ -66,12 +85,12 @@ namespace Zenith {
     });
   }
 
-  void OpenGLIndexBuffer::SetData(void* buffer, uint32_t size, uint32_t offset)
+  void OpenGLIndexBuffer::SetData(void* data, uint32_t size, uint32_t offset)
   {
+    m_LocalData = Buffer::Copy(data, size);
     m_Size = size;
     Renderer::Submit([=](){
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, buffer, GL_STATIC_DRAW);
+      glNamedBufferSubData(m_RendererID, offset, m_Size, m_LocalData.Data);
     });
   }
 
