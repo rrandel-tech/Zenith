@@ -17,6 +17,8 @@ namespace Zenith {
     inline uint32_t GetWidth() const override { return m_Data.Width; }
     inline uint32_t GetHeight() const override { return m_Data.Height; }
 
+    virtual std::pair<float, float> GetWindowPos() const override;
+
     // Window attributes
     inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
     void SetVSync(bool enabled);

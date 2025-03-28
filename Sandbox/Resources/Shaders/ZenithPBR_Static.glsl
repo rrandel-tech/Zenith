@@ -27,14 +27,16 @@ out VertexOutput
     vec3 Normal;
   vec2 TexCoord;
   mat3 WorldNormals;
+  vec3 Binormal;
 } vs_Output;
 
 void main()
 {
-  vs_Output.WorldPosition = vec3(mat4(u_ModelMatrix) * vec4(a_Position, 1.0));
+  vs_Output.WorldPosition = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
     vs_Output.Normal = a_Normal;
   vs_Output.TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
   vs_Output.WorldNormals = mat3(u_ModelMatrix) * mat3(a_Tangent, a_Binormal, a_Normal);
+  vs_Output.Binormal = a_Binormal;
 
   gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 }
@@ -61,9 +63,10 @@ in VertexOutput
     vec3 Normal;
   vec2 TexCoord;
   mat3 WorldNormals;
+  vec3 Binormal;
 } vs_Input;
 
-layout(location=0) out vec4 color;
+layout(location = 0) out vec4 color;
 
 uniform Light lights;
 uniform vec3 u_CameraPosition;

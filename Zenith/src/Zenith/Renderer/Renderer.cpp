@@ -1,6 +1,8 @@
 #include "znpch.hpp"
 #include "Renderer.hpp"
 
+#include "Shader.hpp"
+
 namespace Zenith {
 
   Renderer* Renderer::s_Instance = new Renderer();
@@ -8,9 +10,11 @@ namespace Zenith {
 
   void Renderer::Init()
   {
-    Renderer::Submit([](){
-      RendererAPI::Init();
-    });
+    s_Instance->m_ShaderLibrary = std::make_unique<ShaderLibrary>();
+    Renderer::Submit([](){ RendererAPI::Init(); });
+
+    Renderer::GetShaderLibrary()->Load("Resources/Shaders/ZenithPBR_Static.glsl");
+    Renderer::GetShaderLibrary()->Load("Resources/Shaders/ZenithPBR_Anim.glsl");
   }
 
   void Renderer::Clear()
