@@ -8,7 +8,14 @@ namespace Zenith {
   static void OpenGLLogMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
   {
     if (severity != GL_DEBUG_SEVERITY_NOTIFICATION)
+    {
       ZN_CORE_ERROR("{0}", message);
+      ZN_CORE_ASSERT(false, "");
+    }
+    else
+    {
+      ZN_CORE_TRACE("{0}", message);
+    }
   }
 
   void RendererAPI::Init()
@@ -35,6 +42,13 @@ namespace Zenith {
 
     glGetIntegerv(GL_MAX_SAMPLES, &caps.MaxSamples);
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &caps.MaxAnisotropy);
+
+    GLenum error = glGetError();
+    while (error != GL_NO_ERROR)
+    {
+      ZN_CORE_ERROR("OpenGL Error {0}", error);
+      error = glGetError();
+    }
   }
 
   void RendererAPI::Shutdown()
@@ -53,12 +67,13 @@ namespace Zenith {
 
   void RendererAPI::DrawIndexed(uint32_t count, bool depthTest)
   {
-    if (depthTest)
-      glEnable(GL_DEPTH_TEST);
-    else
+    if (!depthTest)
       glDisable(GL_DEPTH_TEST);
 
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+
+    if (!depthTest)
+      glEnable(GL_DEPTH_TEST);
   }
 
 }

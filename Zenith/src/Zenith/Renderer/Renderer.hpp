@@ -5,6 +5,7 @@
 
 namespace Zenith {
 
+  // TODO: Maybe this should be renamed to RendererAPI? Because we want an actual renderer vs API calls...
   class Renderer
   {
   public:

@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Zenith/Core/Base.hpp"
+#include "Zenith/Core/Buffer.hpp"
+
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/ShaderUniform.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
@@ -92,6 +95,8 @@ namespace Zenith {
   class Shader
   {
   public:
+    using ShaderReloadedCallback = std::function<void()>;
+
     virtual void Reload() = 0;
 
     virtual void Bind() = 0;
@@ -101,6 +106,7 @@ namespace Zenith {
     // Temporary while we don't have materials
     virtual void SetFloat(const std::string& name, float value) = 0;
     virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
+    virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value) = 0;
 
     virtual const std::string& GetName() const = 0;
 
@@ -108,6 +114,18 @@ namespace Zenith {
     // Note: currently for simplicity this is simply a string filepath, however
     //       in the future this will be an asset object + metadata
     static Shader* Create(const std::string& filepath);
+
+    virtual void SetVSMaterialUniformBuffer(Buffer buffer) = 0;
+    virtual void SetPSMaterialUniformBuffer(Buffer buffer) = 0;
+
+    virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
+    virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;
+    virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const = 0;
+    virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const = 0;
+
+    virtual const ShaderResourceList& GetResources() const = 0;
+
+    virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;
 
     // Temporary, before we have an asset manager
     static std::vector<Shader*> s_AllShaders;

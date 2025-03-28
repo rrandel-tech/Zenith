@@ -13,7 +13,7 @@
 
 #include "Zenith/Core/Application.hpp"
 #include "Zenith/Core/Log.hpp"
-#include "Zenith/Core/Version.hpp"
+#include "Zenith/Core/TimeStep.hpp"
 
 #include "Zenith/Core/Events/Event.hpp"
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
@@ -30,4 +30,5 @@
 #include "Zenith/Renderer/Shader.hpp"
 #include "Zenith/Renderer/Mesh.hpp"
 #include "Zenith/Renderer/Camera.hpp"
+#include "Zenith/Renderer/Material.hpp"
 // ===================================================

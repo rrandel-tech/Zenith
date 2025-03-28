@@ -150,6 +150,10 @@ namespace Zenith {
   {
     glfwPollEvents();
     glfwSwapBuffers(m_Window);
+
+    float time = glfwGetTime();
+    float delta = time - m_LastFrameTime;
+    m_LastFrameTime = time;
   }
 
   void WindowsWindow::SetVSync(bool enabled)

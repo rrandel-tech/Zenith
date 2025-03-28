@@ -32,18 +32,19 @@ namespace Zenith {
   // Texture2D
   //////////////////////////////////////////////////////////////////////////////////
 
-  OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height)
-    : m_Format(format), m_Width(width), m_Height(height)
+  OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap)
+    : m_Format(format), m_Width(width), m_Height(height), m_Wrap(wrap)
   {
     auto self = this;
     Renderer::Submit([=](){
       glGenTextures(1, &m_RendererID);
       glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      GLenum wrap = m_Wrap == TextureWrap::Clamp ? GL_CLAMP_TO_EDGE : GL_REPEAT;
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
       glTextureParameterf(m_RendererID, GL_TEXTURE_MAX_ANISOTROPY, RendererAPI::GetCapabilities().MaxAnisotropy);
 
       glTexImage2D(GL_TEXTURE_2D, 0, ZenithToOpenGLTextureFormat(m_Format), m_Width, m_Height, 0, ZenithToOpenGLTextureFormat(m_Format), GL_UNSIGNED_BYTE, nullptr);
@@ -58,13 +59,13 @@ namespace Zenith {
   {
     int width, height, channels;
     ZN_CORE_INFO("Loading texture {0}, srgb={1}", path, srgb);
-    m_ImageData = stbi_load(path.c_str(), &width, &height, &channels, srgb ? STBI_rgb : STBI_rgb_alpha);
+    m_ImageData.Data = stbi_load(path.c_str(), &width, &height, &channels, srgb ? STBI_rgb : STBI_rgb_alpha);
 
     m_Width = width;
     m_Height = height;
     m_Format = TextureFormat::RGBA;
 
-    Renderer::Submit([=]() {
+    Renderer::Submit([=](){
       // TODO: Consolidate properly
       if (srgb)
       {
@@ -75,7 +76,7 @@ namespace Zenith {
         glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, levels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
         glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, GL_RGB, GL_UNSIGNED_BYTE, m_ImageData);
+        glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, GL_RGB, GL_UNSIGNED_BYTE, m_ImageData.Data);
         glGenerateTextureMipmap(m_RendererID);
       }
       else
@@ -88,18 +89,17 @@ namespace Zenith {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, ZenithToOpenGLTextureFormat(m_Format), m_Width, m_Height, 0, srgb ? GL_SRGB8 : ZenithToOpenGLTextureFormat(m_Format), GL_UNSIGNED_BYTE, m_ImageData);
+        glTexImage2D(GL_TEXTURE_2D, 0, ZenithToOpenGLTextureFormat(m_Format), m_Width, m_Height, 0, srgb ? GL_SRGB8 : ZenithToOpenGLTextureFormat(m_Format), GL_UNSIGNED_BYTE, m_ImageData.Data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         glBindTexture(GL_TEXTURE_2D, 0);
       }
-      stbi_image_free(m_ImageData);
+      stbi_image_free(m_ImageData.Data);
     });
   }
 
   OpenGLTexture2D::~OpenGLTexture2D()
   {
-    auto self = this;
     Renderer::Submit([=](){
       glDeleteTextures(1, &m_RendererID);
     });
@@ -107,11 +107,39 @@ namespace Zenith {
 
   void OpenGLTexture2D::Bind(uint32_t slot) const
   {
-    Renderer::Submit([=](){
+    Renderer::Submit([=]() {
       glBindTextureUnit(slot, m_RendererID);
     });
   }
 
+  void OpenGLTexture2D::Lock()
+  {
+    m_Locked = true;
+  }
+
+  void OpenGLTexture2D::Unlock()
+  {
+    m_Locked = false;
+    Renderer::Submit([=](){
+      glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, ZenithToOpenGLTextureFormat(m_Format), GL_UNSIGNED_BYTE, m_ImageData.Data);
+    });
+  }
+
+  void OpenGLTexture2D::Resize(uint32_t width, uint32_t height)
+  {
+    ZN_CORE_ASSERT(m_Locked, "Texture must be locked!");
+
+    m_ImageData.Allocate(width * height * Texture::GetBPP(m_Format));
+#if ZN_DEBUG
+    m_ImageData.ZeroInitialize();
+#endif
+  }
+
+  Buffer OpenGLTexture2D::GetWriteableBuffer()
+  {
+    ZN_CORE_ASSERT(m_Locked, "Texture must be locked!");
+    return m_ImageData;
+  }
 
   //////////////////////////////////////////////////////////////////////////////////
   // TextureCube
@@ -208,7 +236,7 @@ namespace Zenith {
   OpenGLTextureCube::~OpenGLTextureCube()
   {
     auto self = this;
-    Renderer::Submit([=]() {
+    Renderer::Submit([=](){
       glDeleteTextures(1, &m_RendererID);
     });
   }
@@ -216,8 +244,7 @@ namespace Zenith {
   void OpenGLTextureCube::Bind(uint32_t slot) const
   {
     Renderer::Submit([=]() {
-      glActiveTexture(GL_TEXTURE0 + slot);
-      glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
+      glBindTextureUnit(slot, m_RendererID);
     });
   }
 

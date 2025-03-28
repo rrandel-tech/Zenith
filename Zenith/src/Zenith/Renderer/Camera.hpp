@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Zenith/Core/TimeStep.hpp"
+
 #include <glm/glm.hpp>
 
 namespace Zenith {
@@ -10,7 +12,7 @@ namespace Zenith {
     Camera(const glm::mat4& projectionMatrix);
 
     void Focus();
-    void Update();
+    void Update(Timestep ts);
 
     inline float GetDistance() const { return m_Distance; }
     inline void SetDistance(float distance) { m_Distance = distance; }
