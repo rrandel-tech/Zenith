@@ -26,7 +26,7 @@ namespace Zenith {
     case ShaderDataType::Bool:     return 1;
     }
 
-    HZ_CORE_ASSERT(false, "Unknown ShaderDataType!");
+    ZN_CORE_ASSERT(false, "Unknown ShaderDataType!");
     return 0;
   }
 
@@ -62,7 +62,7 @@ namespace Zenith {
       case ShaderDataType::Bool:    return 1;
       }
 
-      HZ_CORE_ASSERT(false, "Unknown ShaderDataType!");
+      ZN_CORE_ASSERT(false, "Unknown ShaderDataType!");
       return 0;
     }
   };
