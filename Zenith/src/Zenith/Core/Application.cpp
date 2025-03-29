@@ -78,7 +78,7 @@ namespace Zenith {
 
         // Render ImGui on render thread
         Application* app = this;
-        Renderer::Submit([=](){ app->RenderImGui(); });
+        Renderer::Submit([app](){ app->RenderImGui(); });
 
         Renderer::Get().WaitAndRender();
       }
@@ -117,7 +117,10 @@ namespace Zenith {
     Renderer::Submit([=](){ glViewport(0, 0, width, height); });
     auto& fbs = FramebufferPool::GetGlobal()->GetAll();
     for (auto& fb : fbs)
-      fb->Resize(width, height);
+    {
+      if (auto fbp = fb.lock())
+        fbp->Resize(width, height);
+    }
     return false;
   }
 

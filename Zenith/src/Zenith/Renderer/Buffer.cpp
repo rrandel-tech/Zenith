@@ -1,5 +1,7 @@
 #include "znpch.hpp"
 
+#include "Renderer.hpp"
+
 #include "Zenith/Platform/OpenGL/OpenGLBuffer.hpp"
 
 namespace Zenith {

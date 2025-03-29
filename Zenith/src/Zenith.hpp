@@ -24,6 +24,7 @@
 
 // === Zenith Renderer API ===========================
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/RenderPass.hpp"
 #include "Zenith/Renderer/Framebuffer.hpp"
 #include "Zenith/Renderer/Buffer.hpp"
 #include "Zenith/Renderer/VertexArray.hpp"

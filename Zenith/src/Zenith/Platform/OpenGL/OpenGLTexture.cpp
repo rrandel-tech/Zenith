@@ -36,7 +36,7 @@ namespace Zenith {
     : m_Format(format), m_Width(width), m_Height(height), m_Wrap(wrap)
   {
     auto self = this;
-    Renderer::Submit([=](){
+    Renderer::Submit([this](){
       glGenTextures(1, &m_RendererID);
       glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
@@ -65,7 +65,7 @@ namespace Zenith {
     m_Height = height;
     m_Format = TextureFormat::RGBA;
 
-    Renderer::Submit([=](){
+    Renderer::Submit([this, srgb](){
       // TODO: Consolidate properly
       if (srgb)
       {
@@ -100,14 +100,14 @@ namespace Zenith {
 
   OpenGLTexture2D::~OpenGLTexture2D()
   {
-    Renderer::Submit([=](){
+    Renderer::Submit([this](){
       glDeleteTextures(1, &m_RendererID);
     });
   }
 
   void OpenGLTexture2D::Bind(uint32_t slot) const
   {
-    Renderer::Submit([=]() {
+    Renderer::Submit([this, slot]() {
       glBindTextureUnit(slot, m_RendererID);
     });
   }
@@ -120,7 +120,7 @@ namespace Zenith {
   void OpenGLTexture2D::Unlock()
   {
     m_Locked = false;
-    Renderer::Submit([=](){
+    Renderer::Submit([this](){
       glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, ZenithToOpenGLTextureFormat(m_Format), GL_UNSIGNED_BYTE, m_ImageData.Data);
     });
   }
@@ -236,14 +236,14 @@ namespace Zenith {
   OpenGLTextureCube::~OpenGLTextureCube()
   {
     auto self = this;
-    Renderer::Submit([=](){
+    Renderer::Submit([this](){
       glDeleteTextures(1, &m_RendererID);
     });
   }
 
   void OpenGLTextureCube::Bind(uint32_t slot) const
   {
-    Renderer::Submit([=]() {
+    Renderer::Submit([this, slot]() {
       glBindTextureUnit(slot, m_RendererID);
     });
   }

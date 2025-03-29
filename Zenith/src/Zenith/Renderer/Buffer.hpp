@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Zenith/Renderer/Renderer.hpp"
+#include "RendererAPI.hpp"
 
 namespace Zenith {
 
