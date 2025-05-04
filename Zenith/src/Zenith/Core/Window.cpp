@@ -1,4 +1,5 @@
 #include "znpch.hpp"
+#include <glad/glad.h>
 #include "Window.hpp"
 
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
@@ -51,6 +52,8 @@ namespace Zenith {
 		ZN_CORE_ASSERT(m_Window, "GLFW window creation failed!");
 
 		glfwMakeContextCurrent(m_Window);
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		ZN_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glfwMaximizeWindow(m_Window);
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);

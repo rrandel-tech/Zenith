@@ -19,6 +19,9 @@ public:
 	virtual void OnUpdate() override
 	{}
 
+	virtual void OnImGuiRender() override
+	{}
+
 	virtual void OnEvent(Zenith::Event& event) override
 	{}
 };

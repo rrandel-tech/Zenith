@@ -48,6 +48,8 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 include "Zenith/vendor/GLFW"
+include "Zenith/vendor/imgui"
+include "Zenith/vendor/Glad"
 group ""
 
 group "Core"

@@ -5,8 +5,6 @@
 
 namespace Zenith {
 
-#define BIND_EVENT_FN(fn) std::bind(&Application::fn, this, std::placeholders::_1)
-
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application(const ApplicationProps& props)
