@@ -23,3 +23,4 @@
 #include <imgui/imgui.h>
 
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/Buffer.hpp"

@@ -13,14 +13,35 @@ public:
 	{}
 
 	virtual void OnAttach() override
-	{}
+	{
+		static float vertices[] = {
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.0f,  0.5f, 0.0f
+		};
+
+		static uint32_t indices[] = {
+			0, 1, 2
+		};
+
+		m_VB = std::unique_ptr<Zenith::VertexBuffer>(Zenith::VertexBuffer::Create());
+		m_VB->SetData(vertices, sizeof(vertices));
+
+		m_IB = std::unique_ptr<Zenith::IndexBuffer>(Zenith::IndexBuffer::Create());
+		m_IB->SetData(indices, sizeof(indices));
+	}
 
 	virtual void OnDetach() override
 	{}
 
 	virtual void OnUpdate() override
 	{
-		Zenith::Renderer::Clear(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], m_ClearColor[3]);
+		using namespace Zenith;
+		Renderer::Clear(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], m_ClearColor[3]);
+
+		m_VB->Bind();
+		m_IB->Bind();
+		Renderer::DrawIndexed(3);
 	}
 
 	virtual void OnImGuiRender() override
@@ -33,6 +54,8 @@ public:
 	virtual void OnEvent(Zenith::Event& event) override
 	{}
 private:
+	std::unique_ptr<Zenith::VertexBuffer> m_VB;
+	std::unique_ptr<Zenith::IndexBuffer> m_IB;
 	float m_ClearColor[4];
 };
 
