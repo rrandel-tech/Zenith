@@ -1,0 +1,21 @@
+# Binaries
+**/bin/
+!vendor/bin/premake/
+bin-int/
+obj/
+Intermediates/
+Binaries
+__pycache__
+
+# Visual Studio files and folder
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+**.user
+
+.idea/
+Makefile
+*.make
+*.a
