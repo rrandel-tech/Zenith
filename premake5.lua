@@ -1,6 +1,8 @@
+include "Dependencies.lua"
+
 workspace "Zenith"
 	configurations { "Debug", "Debug-AS", "Release", "Dist" }
-	startproject "Zenith-Editor"
+	startproject "Sandbox"
 		conformancemode "On"
 
 	language "C++"
@@ -43,6 +45,10 @@ workspace "Zenith"
 		buildoptions { "/utf-8", "/EHsc", "/Zc:preprocessor", "/Zc:__cplusplus" }
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+group "Dependencies"
+include "Zenith/vendor/GLFW"
+group ""
 
 group "Core"
 include "Zenith"

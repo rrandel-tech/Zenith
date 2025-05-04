@@ -4,7 +4,8 @@
 class Sandbox : public Zenith::Application
 {
 public:
-	Sandbox()
+	Sandbox(const Zenith::ApplicationProps& props)
+		: Application(props)
 	{
 		ZN_TRACE("Hello!");
 	}
@@ -12,5 +13,5 @@ public:
 
 Zenith::Application* Zenith::CreateApplication(int argc, char** argv)
 {
-	return new Sandbox();
+	return new Sandbox({ "Sandbox", 1600, 900 });
 }

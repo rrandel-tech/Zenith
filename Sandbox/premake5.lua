@@ -1,4 +1,4 @@
-project "Zenith-Editor"
+project "Sandbox"
 	kind "ConsoleApp"
 
 	targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
@@ -35,6 +35,8 @@ project "Zenith-Editor"
 		symbols "On"
 		defines { "ZN_DEBUG" }
 
+		ProcessDependencies("Debug")
+
 	filter { "system:windows", "configurations:Debug-AS" }
 		sanitize { "Address" }
 		flags { "NoRuntimeChecks", "NoIncrementalLink" }
@@ -44,6 +46,8 @@ project "Zenith-Editor"
 		vectorextensions "AVX2"
 		isaextensions { "BMI", "POPCNT", "LZCNT", "F16C" }
 		defines { "ZN_RELEASE", }
+
+		ProcessDependencies("Release")
 
 	filter "configurations:Dist"
 		flags { "ExcludeFromBuild" }

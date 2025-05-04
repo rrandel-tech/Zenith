@@ -16,6 +16,8 @@ project "Zenith"
 
 	includedirs { "src/", "vendor/" }
 
+	IncludeDependencies()
+
 	filter "system:windows"
 		systemversion "latest"
 		defines { "ZN_PLATFORM_WINDOWS" }

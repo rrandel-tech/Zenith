@@ -13,6 +13,7 @@
 
 #include "Zenith/Core/Application.hpp"
 #include "Zenith/Core/Log.hpp"
+#include "Zenith/Core/Input.hpp"
 
 #include "Zenith/Core/Events/Event.hpp"
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
