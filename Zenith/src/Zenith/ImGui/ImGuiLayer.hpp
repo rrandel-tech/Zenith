@@ -9,15 +9,15 @@ namespace Zenith {
 	{
 	public:
 		ImGuiLayer();
-		ImGuiLayer(const std::string& name);
-		virtual ~ImGuiLayer();
+		explicit ImGuiLayer(const std::string& name);
+		~ImGuiLayer() override;
 
 		void Begin();
 		void End();
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
-		virtual void OnImGuiRender() override;
+		void OnAttach() override;
+		void OnDetach() override;
+		void OnImGuiRender() override;
 	private:
 		float m_Time = 0.0f;
 	};

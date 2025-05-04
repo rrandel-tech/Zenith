@@ -6,6 +6,8 @@
 
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
 
+#include "Zenith/ImGui/ImGuiLayer.hpp"
+
 namespace Zenith {
 
 	struct ApplicationProps {
@@ -36,6 +38,7 @@ namespace Zenith {
 		void PushOverlay(Layer* layer);
 		void PopLayer(Layer* layer);
 		void PopOverlay(Layer* layer);
+		void RenderImGui();
 
 		Window& GetWindow() const { return *m_Window; }
 		static Application& Get() { return *s_Instance; }
@@ -48,6 +51,7 @@ namespace Zenith {
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
+		ImGuiLayer* m_ImGuiLayer;
 
 		static Application* s_Instance;
 	};

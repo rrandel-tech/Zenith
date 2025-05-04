@@ -8,48 +8,46 @@
 #include "backends/imgui_impl_opengl3.h"
 
 #include "Zenith/Core/Application.hpp"
+#include "Zenith/Renderer/Renderer.hpp"
+
 #include <GLFW/glfw3.h>
 
 namespace Zenith {
 
-	ImGuiLayer::ImGuiLayer()
-	{}
+	ImGuiLayer::ImGuiLayer() = default;
 
 	ImGuiLayer::ImGuiLayer(const std::string& name)
-	{}
+		: Layer(name) {
+	}
 
-	ImGuiLayer::~ImGuiLayer()
-	{}
+	ImGuiLayer::~ImGuiLayer() = default;
 
 	void ImGuiLayer::OnAttach()
 	{
-		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
-		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
+		ImGuiIO& io = ImGui::GetIO();
 
-		// Setup Dear ImGui style
+		// Enable useful features
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Keyboard nav
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Docking
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Multi-viewport
+
+		// Apply dark theme
 		ImGui::StyleColorsDark();
-		//ImGui::StyleColorsClassic();
 
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-		ImGuiStyle& style = ImGui::GetStyle();
+		// Match platform windows to main window style
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
+			ImGuiStyle& style = ImGui::GetStyle();
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		Application& app = Application::Get();
+		// Setup platform/renderer bindings
+		auto& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
 	}
@@ -71,19 +69,23 @@ namespace Zenith {
 	void ImGuiLayer::End()
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		Application& app = Application::Get();
-		io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+		auto& app = Application::Get();
 
-		// Rendering
+		io.DisplaySize = ImVec2(
+			static_cast<float>(app.GetWindow().GetWidth()),
+			static_cast<float>(app.GetWindow().GetHeight())
+		);
+
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+		// Handle multi-viewport rendering
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			GLFWwindow* backup_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(backup_current_context);
+			glfwMakeContextCurrent(backup_context);
 		}
 	}
 
