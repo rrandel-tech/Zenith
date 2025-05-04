@@ -1,10 +1,6 @@
 #pragma once
 
-#include "Zenith/Core/Base.hpp"
-
-#include <functional>
-#include <ostream>
-#include <string>
+#include "znpch.hpp"
 
 namespace Zenith {
 

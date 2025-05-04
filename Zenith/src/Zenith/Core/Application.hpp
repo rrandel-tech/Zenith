@@ -2,6 +2,7 @@
 
 #include "Zenith/Core/Base.hpp"
 #include "Zenith/Core/Window.hpp"
+#include "Zenith/Core/LayerStack.hpp"
 
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
 
@@ -28,7 +29,13 @@ namespace Zenith {
 		virtual void OnInit() {}
 		virtual void OnShutdown() {}
 		virtual void OnUpdate() {}
+
 		virtual void OnEvent(Event& event);
+
+		void PushLayer(Layer* layer);
+		void PushOverlay(Layer* layer);
+		void PopLayer(Layer* layer);
+		void PopOverlay(Layer* layer);
 
 		Window& GetWindow() const { return *m_Window; }
 		static Application& Get() { return *s_Instance; }
@@ -40,6 +47,7 @@ namespace Zenith {
 	private:
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
+		LayerStack m_LayerStack;
 
 		static Application* s_Instance;
 	};
