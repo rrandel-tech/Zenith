@@ -15,9 +15,12 @@ Dependencies = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/imgui",
 	},
 	Glad = {
-    LibName = "Glad",
-    IncludeDir = "%{wks.location}/Zenith/vendor/Glad/include"
-  },
+		LibName = "Glad",
+		IncludeDir = "%{wks.location}/Zenith/vendor/Glad/include"
+	},
+	GLM = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/glm",
+	},
 }
 
 function LinkDependency(table, is_debug, target)
