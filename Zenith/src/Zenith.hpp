@@ -24,3 +24,4 @@
 
 #include "Zenith/Renderer/Renderer.hpp"
 #include "Zenith/Renderer/Buffer.hpp"
+#include "Zenith/Renderer/Shader.hpp"
