@@ -16,6 +16,9 @@ workspace "Zenith"
 		"NOMINMAX",
 		"SPDLOG_USE_STD_FORMAT",
 		"_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING",
+		"TRACY_ENABLE",
+		"TRACY_ON_DEMAND",
+		"TRACY_CALLSTACK=10",
 	}
 
 	filter "action:vs*"
@@ -50,6 +53,7 @@ group "Dependencies"
 include "Zenith/vendor/GLFW"
 include "Zenith/vendor/imgui"
 include "Zenith/vendor/Glad"
+include "Zenith/vendor/tracy"
 group ""
 
 group "Core"

@@ -10,6 +10,12 @@ Dependencies = {
 		LibName = "GLFW",
 		IncludeDir = "%{wks.location}/Zenith/vendor/GLFW/include"
 	},
+	Assimp = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/assimp/include",
+		Windows = { LibName = "assimp-vc143-mt", DebugLibName = "assimp-vc143-mtd", LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/windows/%{cfg.buildcfg}/" },
+		Linux = { LibName = "assimp", LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/linux/" },
+		Configurations = "Debug,Release"
+	},
 	ImGui = {
 		LibName = "ImGui",
 		IncludeDir = "%{wks.location}/Zenith/vendor/imgui",
@@ -20,6 +26,19 @@ Dependencies = {
 	},
 	GLM = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/glm",
+	},
+	Tracy = {
+		LibName = "Tracy",
+		IncludeDir = "%{wks.location}/Zenith/vendor/tracy/tracy/public",
+	},
+	STB = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/stb/include",
+	},
+	WS2 = {
+		Windows = { LibName = "ws2_32", },
+	},
+	Dbghelp = {
+		Windows = { LibName = "	Dbghelp" },
 	},
 }
 

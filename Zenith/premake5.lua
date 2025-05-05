@@ -18,6 +18,8 @@ project "Zenith"
 
 	IncludeDependencies()
 
+	defines { "GLM_FORCE_DEPTH_ZERO_TO_ONE" }
+
 	filter "system:windows"
 		systemversion "latest"
 		defines { "ZN_PLATFORM_WINDOWS" }
