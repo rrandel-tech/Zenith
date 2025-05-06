@@ -14,6 +14,8 @@
 #include <string>
 #include <Zenith/Core/KeyCodes.hpp>
 
+#include "Zenith/Editor/SceneHierarchyPanel.hpp"
+
 static void ImGuiShowHelpMarker(const char* desc)
 {
 	ImGui::TextDisabled("(?)");
@@ -31,7 +33,7 @@ class EditorLayer : public Zenith::Layer
 {
 public:
 	EditorLayer()
-		: m_Scene(Scene::Model), m_Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f))
+		: m_SceneType(SceneType::Model)
 	{}
 
 	virtual ~EditorLayer()
@@ -85,118 +87,84 @@ public:
 
 		using namespace glm;
 
-		m_Mesh.reset(new Zenith::Mesh("Resources/Models/m1911/m1911.fbx"));
-		m_MeshMaterial.reset(new Zenith::MaterialInstance(m_Mesh->GetMaterial()));
+		auto environment = Zenith::Environment::Load("Resources/Env/birchwood_4k.hdr");
 
-		m_QuadShader = Zenith::Shader::Create("Resources/Shaders/quad.glsl");
-		m_HDRShader = Zenith::Shader::Create("Resources/Shaders/hdr.glsl");
+		// Model Scene
+		{
+			m_Scene = Zenith::CreateRef<Zenith::Scene>("Model Scene");
+			m_Scene->SetCamera(Zenith::Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
 
-		m_SphereMesh.reset(new Zenith::Mesh("Resources/Models/Sphere1m.fbx"));
+			m_Scene->SetEnvironment(environment);
+
+			m_MeshEntity = m_Scene->CreateEntity();
+
+			auto mesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Models/m1911/m1911.fbx");
+			//auto mesh = CreateRef<Mesh>("Resources/Meshes/cerberus/CerberusMaterials.fbx");
+			// auto mesh = CreateRef<Mesh>("Resources/Models/m1911/M1911Materials.fbx");
+			m_MeshEntity->SetMesh(mesh);
+
+			m_MeshMaterial = mesh->GetMaterial();
+		}
+
+		// Sphere Scene
+		{
+			m_SphereScene = Zenith::CreateRef<Zenith::Scene>("PBR Sphere Scene");
+			m_SphereScene->SetCamera(Zenith::Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+
+			m_SphereScene->SetEnvironment(environment);
+
+			auto sphereMesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Models/Sphere1m.fbx");
+			m_SphereBaseMaterial = sphereMesh->GetMaterial();
+
+			float x = -4.0f;
+			float roughness = 0.0f;
+			for (int i = 0; i < 8; i++)
+			{
+				auto sphereEntity = m_SphereScene->CreateEntity();
+
+				Zenith::Ref<Zenith::MaterialInstance> mi = CreateRef<Zenith::MaterialInstance>(m_SphereBaseMaterial);
+				mi->Set("u_Metalness", 1.0f);
+				mi->Set("u_Roughness", roughness);
+				x += 1.1f;
+				roughness += 0.15f;
+				m_MetalSphereMaterialInstances.push_back(mi);
+
+				sphereEntity->SetMesh(sphereMesh);
+				sphereEntity->SetMaterial(mi);
+				sphereEntity->Transform() = translate(mat4(1.0f), vec3(x, 0.0f, 0.0f));
+			}
+
+			x = -4.0f;
+			roughness = 0.0f;
+			for (int i = 0; i < 8; i++)
+			{
+				auto sphereEntity = m_SphereScene->CreateEntity();
+
+				Zenith::Ref<Zenith::MaterialInstance> mi(new Zenith::MaterialInstance(m_SphereBaseMaterial));
+				mi->Set("u_Metalness", 0.0f);
+				mi->Set("u_Roughness", roughness);
+				x += 1.1f;
+				roughness += 0.15f;
+				m_DielectricSphereMaterialInstances.push_back(mi);
+
+				sphereEntity->SetMesh(sphereMesh);
+				sphereEntity->SetMaterial(mi);
+				sphereEntity->Transform() = translate(mat4(1.0f), vec3(x, 1.2f, 0.0f));
+			}
+		}
+
+		m_ActiveScene = m_Scene;
+		m_SceneHierarchyPanel = CreateScope<Zenith::SceneHierarchyPanel>(m_ActiveScene);
+
 		m_PlaneMesh.reset(new Zenith::Mesh("Resources/Models/Plane1m.obj"));
 
-		m_GridShader = Zenith::Shader::Create("Resources/Shaders/Grid.glsl");
-		m_GridMaterial = Zenith::MaterialInstance::Create(Zenith::Material::Create(m_GridShader));
-		m_GridMaterial->Set("u_Scale", m_GridScale);
-		m_GridMaterial->Set("u_Res", m_GridSize);
-
 		// Editor
-		m_CheckerboardTex.reset(Zenith::Texture2D::Create("Resources/Editor/Checkerboard.tga"));
-
-		// Environment
-		m_EnvironmentCubeMap.reset(Zenith::TextureCube::Create("Resources/Textures/environments/Arches_E_PineTree_Radiance.tga"));
-		m_EnvironmentIrradiance.reset(Zenith::TextureCube::Create("Resources/Textures/environments/Arches_E_PineTree_Irradiance.tga"));
-		m_BRDFLUT.reset(Zenith::Texture2D::Create("Resources/Textures/BRDF_LUT.tga"));
-
-		// Render Passes
-		Zenith::FramebufferSpecification geoFramebufferSpec;
-		geoFramebufferSpec.Width = 1280;
-		geoFramebufferSpec.Height = 720;
-		geoFramebufferSpec.Format = Zenith::FramebufferFormat::RGBA16F;
-		geoFramebufferSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-
-		Zenith::RenderPassSpecification geoRenderPassSpec;
-		geoRenderPassSpec.TargetFramebuffer = Zenith::Framebuffer::Create(geoFramebufferSpec);
-		m_GeoPass = Zenith::RenderPass::Create(geoRenderPassSpec);
-
-		Zenith::FramebufferSpecification compFramebufferSpec;
-		compFramebufferSpec.Width = 1280;
-		compFramebufferSpec.Height = 720;
-		compFramebufferSpec.Format = Zenith::FramebufferFormat::RGBA8;
-		compFramebufferSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-
-		Zenith::RenderPassSpecification compRenderPassSpec;
-		compRenderPassSpec.TargetFramebuffer = Zenith::Framebuffer::Create(compFramebufferSpec);
-		m_CompositePass = Zenith::RenderPass::Create(compRenderPassSpec);
-
-		float x = -4.0f;
-		float roughness = 0.0f;
-		for (int i = 0; i < 8; i++)
-		{
-			Zenith::Ref<Zenith::MaterialInstance> mi(new Zenith::MaterialInstance(m_SphereMesh->GetMaterial()));
-			mi->Set("u_Metalness", 1.0f);
-			mi->Set("u_Roughness", roughness);
-			mi->Set("u_ModelMatrix", translate(mat4(1.0f), vec3(x, 0.0f, 0.0f)));
-			x += 1.1f;
-			roughness += 0.15f;
-			m_MetalSphereMaterialInstances.push_back(mi);
-		}
-
-		x = -4.0f;
-		roughness = 0.0f;
-		for (int i = 0; i < 8; i++)
-		{
-			Zenith::Ref<Zenith::MaterialInstance> mi(new Zenith::MaterialInstance(m_SphereMesh->GetMaterial()));
-			mi->Set("u_Metalness", 0.0f);
-			mi->Set("u_Roughness", roughness);
-			mi->Set("u_ModelMatrix", translate(mat4(1.0f), vec3(x, 1.2f, 0.0f)));
-			x += 1.1f;
-			roughness += 0.15f;
-			m_DielectricSphereMaterialInstances.push_back(mi);
-		}
-
-		// Create fullscreen quad for final composite
-		x = -1;
-		float y = -1;
-		float width = 2, height = 2;
-		struct QuadVertex
-		{
-			glm::vec3 Position;
-			glm::vec2 TexCoord;
-		};
-
-		QuadVertex* data = new QuadVertex[4];
-
-		data[0].Position = glm::vec3(x, y, 0);
-		data[0].TexCoord = glm::vec2(0, 0);
-
-		data[1].Position = glm::vec3(x + width, y, 0);
-		data[1].TexCoord = glm::vec2(1, 0);
-
-		data[2].Position = glm::vec3(x + width, y + height, 0);
-		data[2].TexCoord = glm::vec2(1, 1);
-
-		data[3].Position = glm::vec3(x, y + height, 0);
-		data[3].TexCoord = glm::vec2(0, 1);
-
-		m_FullscreenQuadVertexArray = Zenith::VertexArray::Create();
-		auto quadVB = Zenith::VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
-		quadVB->SetLayout({
-			{ Zenith::ShaderDataType::Float3, "a_Position" },
-			{ Zenith::ShaderDataType::Float2, "a_TexCoord" }
-		});
-
-		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
-		auto quadIB = Zenith::IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
-
-		m_FullscreenQuadVertexArray->AddVertexBuffer(quadVB);
-		m_FullscreenQuadVertexArray->SetIndexBuffer(quadIB);
+		m_CheckerboardTex = Zenith::Texture2D::Create("Resources/Editor/Checkerboard.tga");
 
 		// Set lights
 
 		m_Light.Direction = { -0.5f, -0.5f, 1.0f };
 		m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
-
-		m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
 	}
 
 	virtual void OnDetach() override
@@ -206,62 +174,28 @@ public:
 	{
 		// THINGS TO LOOK AT:
 		// - BRDF LUT
-		// - Cubemap mips and filtering
 		// - Tonemapping and proper HDR pipeline
 		using namespace Zenith;
 		using namespace glm;
 
-		m_Camera.Update(ts);
-		auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
-
-		m_Mesh->OnUpdate(ts);
-
-		Renderer::BeginRenderPass(m_GeoPass);
-
-		// TODO:
-		// Renderer::BeginScene(m_Camera);
-		// Renderer::EndScene();
-
-		m_QuadShader->Bind();
-		m_QuadShader->SetMat4("u_InverseVP", inverse(viewProjection));
-		m_EnvironmentIrradiance->Bind(0);
-		m_FullscreenQuadVertexArray->Bind();
-		Renderer::DrawIndexed(m_FullscreenQuadVertexArray->GetIndexBuffer()->GetCount(), false);
-
 		m_MeshMaterial->Set("u_AlbedoColor", m_AlbedoInput.Color);
 		m_MeshMaterial->Set("u_Metalness", m_MetalnessInput.Value);
 		m_MeshMaterial->Set("u_Roughness", m_RoughnessInput.Value);
-		m_MeshMaterial->Set("u_ViewProjectionMatrix", viewProjection);
-		m_MeshMaterial->Set("u_ModelMatrix", scale(mat4(1.0f), vec3(m_MeshScale)));
 		m_MeshMaterial->Set("lights", m_Light);
-		m_MeshMaterial->Set("u_CameraPosition", m_Camera.GetPosition());
-		m_MeshMaterial->Set("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
 		m_MeshMaterial->Set("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
 		m_MeshMaterial->Set("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
 		m_MeshMaterial->Set("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
 		m_MeshMaterial->Set("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
 		m_MeshMaterial->Set("u_EnvMapRotation", m_EnvMapRotation);
 
-		m_MeshMaterial->Set("u_EnvRadianceTex", m_EnvironmentCubeMap);
-		m_MeshMaterial->Set("u_EnvIrradianceTex", m_EnvironmentIrradiance);
-		m_MeshMaterial->Set("u_BRDFLUTTexture", m_BRDFLUT);
-
-		m_SphereMesh->GetMaterial()->Set("u_AlbedoColor", m_AlbedoInput.Color);
-		m_SphereMesh->GetMaterial()->Set("u_Metalness", m_MetalnessInput.Value);
-		m_SphereMesh->GetMaterial()->Set("u_Roughness", m_RoughnessInput.Value);
-		m_SphereMesh->GetMaterial()->Set("u_ViewProjectionMatrix", viewProjection);
-		m_SphereMesh->GetMaterial()->Set("u_ModelMatrix", scale(mat4(1.0f), vec3(m_MeshScale)));
-		m_SphereMesh->GetMaterial()->Set("lights", m_Light);
-		m_SphereMesh->GetMaterial()->Set("u_CameraPosition", m_Camera.GetPosition());
-		m_SphereMesh->GetMaterial()->Set("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
-		m_SphereMesh->GetMaterial()->Set("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
-		m_SphereMesh->GetMaterial()->Set("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
-		m_SphereMesh->GetMaterial()->Set("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
-		m_SphereMesh->GetMaterial()->Set("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
-		m_SphereMesh->GetMaterial()->Set("u_EnvMapRotation", m_EnvMapRotation);
-		m_SphereMesh->GetMaterial()->Set("u_EnvRadianceTex", m_EnvironmentCubeMap);
-		m_SphereMesh->GetMaterial()->Set("u_EnvIrradianceTex", m_EnvironmentIrradiance);
-		m_SphereMesh->GetMaterial()->Set("u_BRDFLUTTexture", m_BRDFLUT);
+		m_SphereBaseMaterial->Set("u_AlbedoColor", m_AlbedoInput.Color);
+		m_SphereBaseMaterial->Set("lights", m_Light);
+		m_SphereBaseMaterial->Set("u_RadiancePrefilter", m_RadiancePrefilter ? 1.0f : 0.0f);
+		m_SphereBaseMaterial->Set("u_AlbedoTexToggle", m_AlbedoInput.UseTexture ? 1.0f : 0.0f);
+		m_SphereBaseMaterial->Set("u_NormalTexToggle", m_NormalInput.UseTexture ? 1.0f : 0.0f);
+		m_SphereBaseMaterial->Set("u_MetalnessTexToggle", m_MetalnessInput.UseTexture ? 1.0f : 0.0f);
+		m_SphereBaseMaterial->Set("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
+		m_SphereBaseMaterial->Set("u_EnvMapRotation", m_EnvMapRotation);
 
 		if (m_AlbedoInput.TextureMap)
 			m_MeshMaterial->Set("u_AlbedoTexture", m_AlbedoInput.TextureMap);
@@ -272,35 +206,10 @@ public:
 		if (m_RoughnessInput.TextureMap)
 			m_MeshMaterial->Set("u_RoughnessTexture", m_RoughnessInput.TextureMap);
 
-		if (m_Scene == Scene::Spheres)
-		{
-			// Metals
-			for (int i = 0; i < 8; i++)
-				Renderer::SubmitMesh(m_SphereMesh, glm::mat4(1.0f), m_MetalSphereMaterialInstances[i]);
+		m_ActiveScene->OnUpdate(ts);
 
-			// Dielectrics
-			for (int i = 0; i < 8; i++)
-				Renderer::SubmitMesh(m_SphereMesh, glm::mat4(1.0f), m_DielectricSphereMaterialInstances[i]);
-
-		}
-		else if (m_Scene == Scene::Model)
-		{
-			if (m_Mesh)
-				Renderer::SubmitMesh(m_Mesh, m_Transform, m_MeshMaterial);
-		}
-
-		m_GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
-		Renderer::SubmitMesh(m_PlaneMesh, glm::mat4(1.0f), m_GridMaterial);
-
-		Renderer::EndRenderPass();
-
-		Renderer::BeginRenderPass(m_CompositePass);
-		m_HDRShader->Bind();
-		m_HDRShader->SetFloat("u_Exposure", m_Exposure);
-		m_GeoPass->GetSpecification().TargetFramebuffer->BindTexture();
-		m_FullscreenQuadVertexArray->Bind();
-		Renderer::DrawIndexed(m_FullscreenQuadVertexArray->GetIndexBuffer()->GetCount(), false);
-		Renderer::EndRenderPass();
+		/*m_GridMaterial->Set("u_ViewProjection", viewProjection);
+	Renderer::SubmitMesh(m_PlaneMesh, glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)), m_GridMaterial);*/
 	}
 
 	enum class PropertyFlag
@@ -329,6 +238,24 @@ public:
 
 		std::string id = "##" + name;
 		ImGui::SliderFloat(id.c_str(), &value, min, max);
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+	}
+
+	void Property(const std::string& name, glm::vec2& value, PropertyFlag flags)
+	{
+		Property(name, value, -1.0f, 1.0f, flags);
+	}
+
+	void Property(const std::string& name, glm::vec2& value, float min, float max, PropertyFlag flags)
+	{
+		ImGui::Text(name.c_str());
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		std::string id = "##" + name;
+		ImGui::SliderFloat2(id.c_str(), glm::value_ptr(value), min, max);
 
 		ImGui::PopItemWidth();
 		ImGui::NextColumn();
@@ -417,11 +344,22 @@ public:
 		// Editor Panel ------------------------------------------------------------------------------
 		ImGui::Begin("Model");
 
-		ImGui::RadioButton("Spheres", (int*)&m_Scene, (int)Scene::Spheres);
+		if (ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres))
+			m_ActiveScene = m_SphereScene;
 		ImGui::SameLine();
-		ImGui::RadioButton("Model", (int*)&m_Scene, (int)Scene::Model);
+		if (ImGui::RadioButton("Model", (int*)&m_SceneType, (int)SceneType::Model))
+			m_ActiveScene = m_Scene;
 
 		ImGui::Begin("Environment");
+
+		if (ImGui::Button("Load Environment Map"))
+		{
+			std::string filename = Zenith::Application::Get().OpenFile("*.hdr");
+			if (filename != "")
+				m_ActiveScene->SetEnvironment(Zenith::Environment::Load(filename));
+		}
+
+		ImGui::SliderFloat("Skybox LOD", &m_Scene->GetSkyboxLod(), 0.0f, 11.0f);
 
 		ImGui::Columns(2);
 		ImGui::AlignTextToFramePadding();
@@ -429,9 +367,7 @@ public:
 		Property("Light Direction", m_Light.Direction);
 		Property("Light Radiance", m_Light.Radiance, PropertyFlag::ColorProperty);
 		Property("Light Multiplier", m_LightMultiplier, 0.0f, 5.0f);
-		Property("Exposure", m_Exposure, 0.0f, 5.0f);
-
-		Property("Mesh Scale", m_MeshScale, 0.0f, 2.0f);
+		Property("Exposure", m_ActiveScene->GetCamera().GetExposure(), 0.0f, 5.0f);
 
 		Property("Radiance Prefiltering", m_RadiancePrefilter);
 		Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
@@ -443,7 +379,8 @@ public:
 		ImGui::Separator();
 		{
 			ImGui::Text("Mesh");
-			std::string fullpath = m_Mesh ? m_Mesh->GetFilePath() : "None";
+			auto mesh = m_MeshEntity->GetMesh();
+			std::string fullpath = mesh ? mesh->GetFilePath() : "None";
 			size_t found = fullpath.find_last_of("/\\");
 			std::string path = found != std::string::npos ? fullpath.substr(found + 1) : fullpath;
 			ImGui::Text(path.c_str()); ImGui::SameLine();
@@ -452,8 +389,10 @@ public:
 				std::string filename = Zenith::Application::Get().OpenFile("");
 				if (filename != "")
 				{
-					m_Mesh.reset(new Zenith::Mesh(filename));
-					m_MeshMaterial.reset(new Zenith::MaterialInstance(m_Mesh->GetMaterial()));
+					auto newMesh = Zenith::CreateRef<Zenith::Mesh>(filename);
+					// m_MeshMaterial.reset(new MaterialInstance(newMesh->GetMaterial()));
+					// m_MeshEntity->SetMaterial(m_MeshMaterial);
+					m_MeshEntity->SetMesh(newMesh);
 				}
 			}
 		}
@@ -482,7 +421,7 @@ public:
 					{
 						std::string filename = Zenith::Application::Get().OpenFile("");
 						if (filename != "")
-							m_AlbedoInput.TextureMap.reset(Zenith::Texture2D::Create(filename, m_AlbedoInput.SRGB));
+							m_AlbedoInput.TextureMap = (Zenith::Texture2D::Create(filename, m_AlbedoInput.SRGB));
 					}
 				}
 				ImGui::SameLine();
@@ -491,7 +430,7 @@ public:
 				if (ImGui::Checkbox("sRGB##AlbedoMap", &m_AlbedoInput.SRGB))
 				{
 					if (m_AlbedoInput.TextureMap)
-						m_AlbedoInput.TextureMap.reset(Zenith::Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), m_AlbedoInput.SRGB));
+						m_AlbedoInput.TextureMap = (Zenith::Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), m_AlbedoInput.SRGB));
 				}
 				ImGui::EndGroup();
 				ImGui::SameLine();
@@ -520,7 +459,7 @@ public:
 					{
 						std::string filename = Zenith::Application::Get().OpenFile("");
 						if (filename != "")
-							m_NormalInput.TextureMap.reset(Zenith::Texture2D::Create(filename));
+							m_NormalInput.TextureMap = (Zenith::Texture2D::Create(filename));
 					}
 				}
 				ImGui::SameLine();
@@ -549,7 +488,7 @@ public:
 					{
 						std::string filename = Zenith::Application::Get().OpenFile("");
 						if (filename != "")
-							m_MetalnessInput.TextureMap.reset(Zenith::Texture2D::Create(filename));
+							m_MetalnessInput.TextureMap = (Zenith::Texture2D::Create(filename));
 					}
 				}
 				ImGui::SameLine();
@@ -580,7 +519,7 @@ public:
 					{
 						std::string filename = Zenith::Application::Get().OpenFile("");
 						if (filename != "")
-							m_RoughnessInput.TextureMap.reset(Zenith::Texture2D::Create(filename));
+							m_RoughnessInput.TextureMap = (Zenith::Texture2D::Create(filename));
 					}
 				}
 				ImGui::SameLine();
@@ -622,11 +561,11 @@ public:
 		ZN_INFO("{0}, {1}", posX, posY);*/
 
 		auto viewportSize = ImGui::GetContentRegionAvail();
-		m_GeoPass->GetSpecification().TargetFramebuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		m_CompositePass->GetSpecification().TargetFramebuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
-		m_Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		ImGui::Image((ImTextureID)(uintptr_t)m_CompositePass->GetSpecification().TargetFramebuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+
+		Zenith::SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		m_ActiveScene->GetCamera().SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+		m_ActiveScene->GetCamera().SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		ImGui::Image((ImTextureID)(uintptr_t)(Zenith::SceneRenderer::GetFinalColorBufferRendererID()), viewportSize, { 0, 1 }, { 1, 0 });
 
 		// Gizmos
 		if (m_GizmoType != -1)
@@ -636,7 +575,7 @@ public:
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
-			ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
+			ImGuizmo::Manipulate(glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()), glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_MeshEntity->Transform()));
 		}
 
 		ImGui::End();
@@ -670,13 +609,11 @@ public:
 			ImGui::EndMenuBar();
 		}
 
-		ImGui::End();
-
-		if (m_Mesh)
-			m_Mesh->OnImGuiRender();
+		m_SceneHierarchyPanel->OnImGuiRender();
 
 		// static bool o = true;
 		// ImGui::ShowDemoWindow(&o);
+		ImGui::End();
 	}
 
 	virtual void OnEvent(Zenith::Event& event) override
@@ -705,16 +642,19 @@ public:
 		return false;
 	}
 private:
-	Zenith::Ref<Zenith::Shader> m_QuadShader;
-	Zenith::Ref<Zenith::Shader> m_HDRShader;
-	Zenith::Ref<Zenith::Shader> m_GridShader;
-	Zenith::Ref<Zenith::Mesh> m_Mesh;
-	Zenith::Ref<Zenith::Mesh> m_SphereMesh, m_PlaneMesh;
-	Zenith::Ref<Zenith::Texture2D> m_BRDFLUT;
-	Zenith::Ref<Zenith::RenderPass> m_GeoPass, m_CompositePass;
+	Zenith::Scope<Zenith::SceneHierarchyPanel> m_SceneHierarchyPanel;
 
-	Zenith::Ref<Zenith::MaterialInstance> m_MeshMaterial;
-	Zenith::Ref<Zenith::MaterialInstance> m_GridMaterial;
+	Zenith::Ref<Zenith::Scene> m_Scene;
+	Zenith::Ref<Zenith::Scene> m_SphereScene;
+	Zenith::Ref<Zenith::Scene> m_ActiveScene;
+
+	Zenith::Entity* m_MeshEntity = nullptr;
+
+	Zenith::Ref<Zenith::Shader> m_BrushShader;
+	Zenith::Ref<Zenith::Mesh> m_PlaneMesh;
+	Zenith::Ref<Zenith::Material> m_SphereBaseMaterial;
+
+	Zenith::Ref<Zenith::Material> m_MeshMaterial;
 	std::vector<Zenith::Ref<Zenith::MaterialInstance>> m_MetalSphereMaterialInstances;
 	std::vector<Zenith::Ref<Zenith::MaterialInstance>> m_DielectricSphereMaterialInstances;
 
@@ -747,16 +687,11 @@ private:
 
 	struct RoughnessInput
 	{
-		float Value = 0.5f;
+		float Value = 0.3f;
 		Zenith::Ref<Zenith::Texture2D> TextureMap;
 		bool UseTexture = false;
 	};
 	RoughnessInput m_RoughnessInput;
-
-	Zenith::Ref<Zenith::VertexArray> m_FullscreenQuadVertexArray;
-	Zenith::Ref<Zenith::TextureCube> m_EnvironmentCubeMap, m_EnvironmentIrradiance;
-
-	Zenith::Camera m_Camera;
 
 	struct Light
 	{
@@ -767,23 +702,20 @@ private:
 	float m_LightMultiplier = 0.3f;
 
 	// PBR params
-	float m_Exposure = 1.0f;
-
 	bool m_RadiancePrefilter = false;
 
 	float m_EnvMapRotation = 0.0f;
 
-	enum class Scene : uint32_t
+	enum class SceneType : uint32_t
 	{
 		Spheres = 0, Model = 1
 	};
-	Scene m_Scene;
+	SceneType m_SceneType;
 
 	// Editor resources
 	Zenith::Ref<Zenith::Texture2D> m_CheckerboardTex;
 
 	int m_GizmoType = -1; // -1 = no gizmo
-	glm::mat4 m_Transform;
 };
 
 class Sandbox : public Zenith::Application

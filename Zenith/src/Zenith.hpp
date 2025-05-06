@@ -24,6 +24,7 @@
 #include <imgui/imgui.h>
 
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/SceneRenderer.hpp"
 #include "Zenith/Renderer/RenderPass.hpp"
 #include "Zenith/Renderer/Framebuffer.hpp"
 #include "Zenith/Renderer/Buffer.hpp"
@@ -33,3 +34,6 @@
 #include "Zenith/Renderer/Mesh.hpp"
 #include "Zenith/Renderer/Camera.hpp"
 #include "Zenith/Renderer/Material.hpp"
+
+#include "Zenith/Scene/Entity.hpp"
+#include "Zenith/Scene/Scene.hpp"

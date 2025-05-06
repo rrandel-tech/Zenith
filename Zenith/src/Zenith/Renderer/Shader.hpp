@@ -13,10 +13,14 @@
 namespace Zenith
 {
 	struct ShaderUniform
-	{};
+	{
+
+	};
 
 	struct ShaderUniformCollection
-	{};
+	{
+
+	};
 
 	enum class UniformType
 	{
@@ -49,10 +53,10 @@ namespace Zenith
 	{
 		virtual const byte* GetBuffer() const = 0;
 		virtual const UniformDecl* GetUniforms() const = 0;
-		virtual uint32_t GetUniformCount() const = 0;
+		virtual unsigned int GetUniformCount() const = 0;
 	};
 
-	template<uint32_t N, uint32_t U>
+	template<unsigned int N, unsigned int U>
 	struct UniformBufferDeclaration : public UniformBufferBase
 	{
 		byte Buffer[N];
@@ -62,7 +66,7 @@ namespace Zenith
 
 		virtual const byte* GetBuffer() const override { return Buffer; }
 		virtual const UniformDecl* GetUniforms() const override { return Uniforms; }
-		virtual uint32_t GetUniformCount() const { return U; }
+		virtual unsigned int GetUniformCount() const { return U; }
 
 		template<typename T>
 		void Push(const std::string& name, const T& data) {}
@@ -109,6 +113,7 @@ namespace Zenith
 		virtual void Reload() = 0;
 
 		virtual void Bind() = 0;
+		virtual RendererID GetRendererID() const = 0;
 		virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
 
 		// Temporary while we don't have materials
@@ -120,7 +125,7 @@ namespace Zenith
 
 		// Represents a complete shader program stored in a single file.
 		// Note: currently for simplicity this is simply a string filepath, however
-		//			in the future this will be an asset object + metadata
+		//       in the future this will be an asset object + metadata
 		static Ref<Shader> Create(const std::string& filepath);
 		static Ref<Shader> CreateFromString(const std::string& source);
 
@@ -129,6 +134,8 @@ namespace Zenith
 
 		virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
 		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;
+		virtual bool HasVSMaterialUniformBuffer() const = 0;
+		virtual bool HasPSMaterialUniformBuffer() const = 0;
 		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const = 0;
 		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const = 0;
 

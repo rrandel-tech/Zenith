@@ -25,6 +25,7 @@ namespace Zenith {
 		m_Name = found != std::string::npos ? filepath.substr(found + 1) : filepath;
 		found = m_Name.find_last_of(".");
 		m_Name = found != std::string::npos ? m_Name.substr(0, found) : m_Name;
+
 		Reload();
 	}
 
@@ -44,24 +45,29 @@ namespace Zenith {
 	void OpenGLShader::Load(const std::string& source)
 	{
 		m_ShaderSource = PreProcess(source);
-		Parse();
+		if (!m_IsCompute)
+			Parse();
 
-		Renderer::Submit([this]() {
-			if (m_RendererID)
-				glDeleteShader(m_RendererID);
-
-			CompileAndUploadShader();
-			ResolveUniforms();
-			ValidateUniforms();
-
-			if (m_Loaded)
+		Renderer::Submit([this]()
 			{
-				for (auto& callback : m_ShaderReloadedCallbacks)
-					callback();
-			}
+				if (m_RendererID)
+					glDeleteShader(m_RendererID);
 
-			m_Loaded = true;
-		});
+				CompileAndUploadShader();
+				if (!m_IsCompute)
+				{
+					ResolveUniforms();
+					ValidateUniforms();
+				}
+
+				if (m_Loaded)
+				{
+					for (auto& callback : m_ShaderReloadedCallbacks)
+						callback();
+				}
+
+				m_Loaded = true;
+			});
 	}
 
 	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
@@ -71,9 +77,9 @@ namespace Zenith {
 
 	void OpenGLShader::Bind()
 	{
-		Renderer::Submit([this]() {
+		Renderer::Submit([=]() {
 			glUseProgram(m_RendererID);
-		});
+			});
 	}
 
 	std::string OpenGLShader::ReadShaderFromFile(const std::string& filepath) const
@@ -90,7 +96,7 @@ namespace Zenith {
 		}
 		else
 		{
-			ZN_CORE_WARN("Could not read shader file {0}", filepath);
+			ZN_CORE_ASSERT(false, "Could not load shader!");
 		}
 
 		return result;
@@ -109,11 +115,19 @@ namespace Zenith {
 			ZN_CORE_ASSERT(eol != std::string::npos, "Syntax error");
 			size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
-			ZN_CORE_ASSERT(type == "vertex" || type == "fragment" || type == "pixel", "Invalid shader type specified");
+			ZN_CORE_ASSERT(type == "vertex" || type == "fragment" || type == "pixel" || type == "compute", "Invalid shader type specified");
 
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);
 			pos = source.find(typeToken, nextLinePos);
-			shaderSources[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+			auto shaderType = ShaderTypeFromString(type);
+			shaderSources[shaderType] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+
+			// Compute shaders cannot contain other types
+			if (shaderType == GL_COMPUTE_SHADER)
+			{
+				m_IsCompute = true;
+				break;
+			}
 		}
 
 		return shaderSources;
@@ -520,6 +534,8 @@ namespace Zenith {
 			return GL_VERTEX_SHADER;
 		if (type == "fragment" || type == "pixel")
 			return GL_FRAGMENT_SHADER;
+		if (type == "compute")
+			return GL_COMPUTE_SHADER;
 
 		return GL_NONE;
 	}
@@ -598,7 +614,7 @@ namespace Zenith {
 		Renderer::Submit([this, buffer]() {
 			glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);
-		});
+			});
 	}
 
 	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
@@ -606,7 +622,7 @@ namespace Zenith {
 		Renderer::Submit([this, buffer]() {
 			glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);
-		});
+			});
 	}
 
 	void OpenGLShader::ResolveAndSetUniforms(const Scope<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
@@ -729,7 +745,7 @@ namespace Zenith {
 
 	void OpenGLShader::UploadUniformBuffer(const UniformBufferBase& uniformBuffer)
 	{
-		for (uint32_t i = 0; i < uniformBuffer.GetUniformCount(); i++)
+		for (unsigned int i = 0; i < uniformBuffer.GetUniformCount(); i++)
 		{
 			const UniformDecl& decl = uniformBuffer.GetUniforms()[i];
 			switch (decl.Type)
@@ -740,7 +756,7 @@ namespace Zenith {
 				float value = *(float*)(uniformBuffer.GetBuffer() + decl.Offset);
 				Renderer::Submit([=]() {
 					UploadUniformFloat(name, value);
-				});
+					});
 			}
 			case UniformType::Float3:
 			{
@@ -748,7 +764,7 @@ namespace Zenith {
 				glm::vec3& values = *(glm::vec3*)(uniformBuffer.GetBuffer() + decl.Offset);
 				Renderer::Submit([=]() {
 					UploadUniformFloat3(name, values);
-				});
+					});
 			}
 			case UniformType::Float4:
 			{
@@ -756,7 +772,7 @@ namespace Zenith {
 				glm::vec4& values = *(glm::vec4*)(uniformBuffer.GetBuffer() + decl.Offset);
 				Renderer::Submit([=]() {
 					UploadUniformFloat4(name, values);
-				});
+					});
 			}
 			case UniformType::Matrix4x4:
 			{
@@ -764,7 +780,7 @@ namespace Zenith {
 				glm::mat4& values = *(glm::mat4*)(uniformBuffer.GetBuffer() + decl.Offset);
 				Renderer::Submit([=]() {
 					UploadUniformMat4(name, values);
-				});
+					});
 			}
 			}
 		}
@@ -774,14 +790,14 @@ namespace Zenith {
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat(name, value);
-		});
+			});
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformMat4(name, value);
-		});
+			});
 	}
 
 	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, bool bind)

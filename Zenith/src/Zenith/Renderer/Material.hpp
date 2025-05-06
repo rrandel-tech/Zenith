@@ -9,6 +9,13 @@
 
 namespace Zenith {
 
+	enum class MaterialFlag
+	{
+		None = BIT(0),
+		DepthTest = BIT(1),
+		Blend = BIT(2)
+	};
+
 	class Material
 	{
 		friend class MaterialInstance;
@@ -17,6 +24,9 @@ namespace Zenith {
 		virtual ~Material();
 
 		void Bind() const;
+
+		uint32_t GetFlags() const { return m_MaterialFlags; }
+		void SetFlag(MaterialFlag flag) { m_MaterialFlags |= (uint32_t)flag; }
 
 		template <typename T>
 		void Set(const std::string& name, const T& value)
@@ -67,7 +77,7 @@ namespace Zenith {
 		Buffer m_PSUniformStorageBuffer;
 		std::vector<Ref<Texture>> m_Textures;
 
-		int32_t m_RenderFlags = 0;
+		uint32_t m_MaterialFlags;
 	};
 
 	class MaterialInstance
@@ -94,6 +104,8 @@ namespace Zenith {
 		void Set(const std::string& name, const Ref<Texture>& texture)
 		{
 			auto decl = m_Material->FindResourceDeclaration(name);
+			if (!decl)
+				ZN_CORE_WARN("Cannot find material property: ", name);
 			uint32_t slot = decl->GetRegister();
 			if (m_Textures.size() <= slot)
 				m_Textures.resize((size_t)slot + 1);
@@ -111,6 +123,12 @@ namespace Zenith {
 		}
 
 		void Bind() const;
+
+		uint32_t GetFlags() const { return m_Material->m_MaterialFlags; }
+		bool GetFlag(MaterialFlag flag) const { return (uint32_t)flag & m_Material->m_MaterialFlags; }
+		void SetFlag(MaterialFlag flag, bool value = true);
+
+		Ref<Shader >GetShader() { return m_Material->m_Shader; }
 	public:
 		static Ref<MaterialInstance> Create(const Ref<Material>& material);
 	private:

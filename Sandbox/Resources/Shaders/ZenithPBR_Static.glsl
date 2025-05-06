@@ -1,5 +1,5 @@
 ﻿// -----------------------------
-// -- Zenith Engine PBR shader --
+// -- Hazel Engine PBR shader --
 // -----------------------------
 // Note: this shader is still very much in progress. There are likely many bugs and future additions that will go in.
 //       Currently heavily updated. 
@@ -19,26 +19,28 @@ layout(location = 3) in vec3 a_Binormal;
 layout(location = 4) in vec2 a_TexCoord;
 
 uniform mat4 u_ViewProjectionMatrix;
-uniform mat4 u_ModelMatrix;
+uniform mat4 u_Transform;
 
 out VertexOutput
 {
 	vec3 WorldPosition;
-		vec3 Normal;
+    vec3 Normal;
 	vec2 TexCoord;
 	mat3 WorldNormals;
+	mat3 WorldTransform;
 	vec3 Binormal;
 } vs_Output;
 
 void main()
 {
-	vs_Output.WorldPosition = vec3(u_ModelMatrix * vec4(a_Position, 1.0));
-		vs_Output.Normal = a_Normal;
+	vs_Output.WorldPosition = vec3(u_Transform * vec4(a_Position, 1.0));
+    vs_Output.Normal = a_Normal;
 	vs_Output.TexCoord = vec2(a_TexCoord.x, 1.0 - a_TexCoord.y);
-	vs_Output.WorldNormals = mat3(u_ModelMatrix) * mat3(a_Tangent, a_Binormal, a_Normal);
+	vs_Output.WorldNormals = mat3(u_Transform) * mat3(a_Tangent, a_Binormal, a_Normal);
+	vs_Output.WorldTransform = mat3(u_Transform);
 	vs_Output.Binormal = a_Binormal;
 
-	gl_Position = u_ViewProjectionMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
+	gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
@@ -60,9 +62,10 @@ struct Light {
 in VertexOutput
 {
 	vec3 WorldPosition;
-		vec3 Normal;
+    vec3 Normal;
 	vec2 TexCoord;
 	mat3 WorldNormals;
+	mat3 WorldTransform;
 	vec3 Binormal;
 } vs_Input;
 
@@ -137,23 +140,23 @@ float gaSchlickGGX(float cosLi, float NdotV, float roughness)
 
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
-		float r = (roughness + 1.0);
-		float k = (r*r) / 8.0;
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
 
-		float nom   = NdotV;
-		float denom = NdotV * (1.0 - k) + k;
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
 
-		return nom / denom;
+    return nom / denom;
 }
 
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
-		float NdotV = max(dot(N, V), 0.0);
-		float NdotL = max(dot(N, L), 0.0);
-		float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-		float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
-		return ggx1 * ggx2;
+    return ggx1 * ggx2;
 }
 
 // Shlick's approximation of the Fresnel factor.
@@ -164,7 +167,7 @@ vec3 fresnelSchlick(vec3 F0, float cosTheta)
 
 vec3 fresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
 {
-		return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 } 
 
 // ---------------------------------------------------------------------------------------------------
@@ -173,17 +176,17 @@ vec3 fresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
 // so turning this on online will cause poor performance
 float RadicalInverse_VdC(uint bits) 
 {
-		bits = (bits << 16u) | (bits >> 16u);
-		bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-		bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-		bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-		bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-		return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+    bits = (bits << 16u) | (bits >> 16u);
+    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+    return float(bits) * 2.3283064365386963e-10; // / 0x100000000
 }
 
 vec2 Hammersley(uint i, uint N)
 {
-		return vec2(float(i)/float(N), RadicalInverse_VdC(i));
+    return vec2(float(i)/float(N), RadicalInverse_VdC(i));
 }
 
 vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N)
@@ -230,11 +233,11 @@ vec3 PrefilterEnvMap(float Roughness, vec3 R)
 
 vec3 RotateVectorAboutY(float angle, vec3 vec)
 {
-		angle = radians(angle);
-		mat3x3 rotationMatrix ={vec3(cos(angle),0.0,sin(angle)),
-														vec3(0.0,1.0,0.0),
-														vec3(-sin(angle),0.0,cos(angle))};
-		return rotationMatrix * vec;
+    angle = radians(angle);
+    mat3x3 rotationMatrix ={vec3(cos(angle),0.0,sin(angle)),
+                            vec3(0.0,1.0,0.0),
+                            vec3(-sin(angle),0.0,cos(angle))};
+    return rotationMatrix * vec;
 }
 
 vec3 Lighting(vec3 F0)
@@ -275,12 +278,7 @@ vec3 IBL(vec3 F0, vec3 Lr)
 	int u_EnvRadianceTexLevels = textureQueryLevels(u_EnvRadianceTex);
 	float NoV = clamp(m_Params.NdotV, 0.0, 1.0);
 	vec3 R = 2.0 * dot(m_Params.View, m_Params.Normal) * m_Params.Normal - m_Params.View;
-	vec3 specularIrradiance = vec3(0.0);
-
-	if (u_RadiancePrefilter > 0.5)
-		specularIrradiance = PrefilterEnvMap(m_Params.Roughness * m_Params.Roughness, R) * u_RadiancePrefilter;
-	else
-		specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), sqrt(m_Params.Roughness) * u_EnvRadianceTexLevels).rgb * (1.0 - u_RadiancePrefilter);
+	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, RotateVectorAboutY(u_EnvMapRotation, Lr), (m_Params.Roughness * m_Params.Roughness) * u_EnvRadianceTexLevels).rgb;
 
 	// Sample BRDF Lut, 1.0 - roughness for y-coord because texture was generated (in Sparky) for gloss model
 	vec2 specularBRDF = texture(u_BRDFLUTTexture, vec2(m_Params.NdotV, 1.0 - m_Params.Roughness)).rg;
@@ -295,7 +293,7 @@ void main()
 	m_Params.Albedo = u_AlbedoTexToggle > 0.5 ? texture(u_AlbedoTexture, vs_Input.TexCoord).rgb : u_AlbedoColor; 
 	m_Params.Metalness = u_MetalnessTexToggle > 0.5 ? texture(u_MetalnessTexture, vs_Input.TexCoord).r : u_Metalness;
 	m_Params.Roughness = u_RoughnessTexToggle > 0.5 ?  texture(u_RoughnessTexture, vs_Input.TexCoord).r : u_Roughness;
-		m_Params.Roughness = max(m_Params.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
+    m_Params.Roughness = max(m_Params.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
 
 	// Normals (either from vertex or map)
 	m_Params.Normal = normalize(vs_Input.Normal);

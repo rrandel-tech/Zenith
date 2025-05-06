@@ -27,7 +27,7 @@ namespace Zenith {
 
 		static void Init();
 
-		static const Scope<ShaderLibrary>& GetShaderLibrary() { return Get().m_ShaderLibrary; }
+		static const Scope<ShaderLibrary>& GetShaderLibrary();
 
 		template<typename FuncT>
 		static void Submit(FuncT&& func)
@@ -36,34 +36,31 @@ namespace Zenith {
 				auto pFunc = (FuncT*)ptr;
 				(*pFunc)();
 
+				// NOTE: Instead of destroying we could try and enforce all items to be trivally destructible
+				// however some items like uniforms which contain std::strings still exist for now
+				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
 				pFunc->~FuncT();
 				};
-			auto storageBuffer = s_Instance->m_CommandQueue.Allocate(renderCmd, sizeof(func));
+			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 
-		void WaitAndRender();
+		/*static void* Submit(RenderCommandFn fn, unsigned int size)
+		{
+			return s_Instance->m_CommandQueue.Allocate(fn, size);
+		}*/
 
-		inline static Renderer& Get() { return *s_Instance; }
+		static void WaitAndRender();
 
 		// ~Actual~ Renderer here... TODO: remove confusion later
-		static void BeginRenderPass(const Ref<RenderPass>& renderPass) { s_Instance->IBeginRenderPass(renderPass); }
-		static void EndRenderPass() { s_Instance->IEndRenderPass(); }
+		static void BeginRenderPass(const Ref<RenderPass>& renderPass);
+		static void EndRenderPass();
 
-		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<MaterialInstance>& overrideMaterial = nullptr) { s_Instance->SubmitMeshI(mesh, transform, overrideMaterial); }
+		static void SubmitQuad(const Ref<MaterialInstance>& material, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitFullscreenQuad(const Ref<MaterialInstance>& material);
+		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<MaterialInstance>& overrideMaterial = nullptr);
 	private:
-		void IBeginRenderPass(const Ref<RenderPass>& renderPass);
-		void IEndRenderPass();
-
-		void SubmitMeshI(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<MaterialInstance>& overrideMaterial);
-
-	private:
-		static Renderer* s_Instance;
-	private:
-		Ref<RenderPass> m_ActiveRenderPass;
-
-		RenderCommandQueue m_CommandQueue;
-		Scope<ShaderLibrary> m_ShaderLibrary;
+		static RenderCommandQueue& GetRenderCommandQueue();
 	};
 
 }

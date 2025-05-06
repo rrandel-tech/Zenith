@@ -9,14 +9,21 @@ namespace Zenith {
 
 	static void OpenGLLogMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
-		if (severity != GL_DEBUG_SEVERITY_NOTIFICATION)
+		switch (severity)
 		{
-			ZN_CORE_ERROR("{0}", message);
-			ZN_CORE_ASSERT(false, "");
-		}
-		else
-		{
-			//ZN_CORE_TRACE("{0}", message);
+		case GL_DEBUG_SEVERITY_HIGH:
+			ZN_CORE_ERROR("[OpenGL Debug HIGH] {0}", message);
+			ZN_CORE_ASSERT(false, "GL_DEBUG_SEVERITY_HIGH");
+			break;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			ZN_CORE_WARN("[OpenGL Debug MEDIUM] {0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_LOW:
+			ZN_CORE_INFO("[OpenGL Debug LOW] {0}", message);
+			break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			// ZN_CORE_TRACE("[OpenGL Debug NOTIFICATION] {0}", message);
+			break;
 		}
 	}
 

@@ -28,5 +28,8 @@ in vec3 v_Normal;
 
 void main()
 {
+	finalColor = vec4(0.8, 0.0, 0.8, 1.0);
+
+
 	finalColor = vec4((v_Normal * 0.5 + 0.5), 1.0);// * u_Color.xyz, 1.0);
 }
