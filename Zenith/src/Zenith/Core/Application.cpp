@@ -2,6 +2,9 @@
 #include "Application.hpp"
 
 #include "Zenith/Renderer/Renderer.hpp"
+
+#include "FatalSignal.hpp"
+
 #include <GLFW/glfw3.h>
 
 namespace Zenith {
@@ -10,6 +13,8 @@ namespace Zenith {
 
 	Application::Application(const ApplicationProps& props)
 	{
+		FatalSignal::Install();
+
 		s_Instance = this;
 
 		m_Window = std::unique_ptr<Window>(Window::Create({ props.Name, props.WindowWidth, props.WindowHeight }));

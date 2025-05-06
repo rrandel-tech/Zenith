@@ -40,6 +40,9 @@ Dependencies = {
 	Dbghelp = {
 		Windows = { LibName = "	Dbghelp" },
 	},
+	BackwardCPP = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/backward-cpp"
+	},
 }
 
 function LinkDependency(table, is_debug, target)
