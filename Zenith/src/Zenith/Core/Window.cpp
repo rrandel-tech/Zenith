@@ -181,17 +181,17 @@ namespace Zenith {
 		m_LastFrameTime = time;
 	}
 
+	inline std::pair<float, float> Window::GetWindowPos() const
+	{
+		int x, y;
+		glfwGetWindowPos(m_Window, &x, &y);
+		return { x, y };
+	}
+
 	void Window::SetVSync(bool enabled)
 	{
 		glfwSwapInterval(enabled ? 1 : 0);
 		m_Data.VSync = enabled;
-	}
-
-	std::pair<float, float> Window::GetWindowPos() const
-	{
-		int x, y;
-		glfwGetWindowPos(m_Window, &x, &y);
-		return { (float)x, (float)y };
 	}
 
 	void Window::Shutdown()

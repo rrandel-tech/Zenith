@@ -5,6 +5,8 @@
 
 namespace Zenith {
 
+	class ShaderLibrary;
+
 	// TODO: Maybe this should be renamed to RendererAPI? Because we want an actual renderer vs API calls...
 	class Renderer
 	{
@@ -21,6 +23,8 @@ namespace Zenith {
 		static void ClearMagenta();
 
 		static void Init();
+
+		static const Scope<ShaderLibrary>& GetShaderLibrary() { return Get().m_ShaderLibrary; }
 
 		template<typename FuncT>
 		static void Submit(FuncT&& func)
@@ -42,6 +46,7 @@ namespace Zenith {
 		static Renderer* s_Instance;
 
 		RenderCommandQueue m_CommandQueue;
+		Scope<ShaderLibrary> m_ShaderLibrary;
 	};
 
 }

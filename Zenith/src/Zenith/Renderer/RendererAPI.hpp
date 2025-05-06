@@ -39,6 +39,8 @@ namespace Zenith {
 
 		static RendererAPIType Current() { return s_CurrentRendererAPI; }
 	private:
+		static void LoadRequiredAssets();
+	private:
 		static RendererAPIType s_CurrentRendererAPI;
 	};
 

@@ -32,6 +32,7 @@ namespace Zenith {
 		PushOverlay(m_ImGuiLayer);
 
 		Renderer::Init();
+		Renderer::Get().WaitAndRender();
 	}
 
 	Application::~Application()

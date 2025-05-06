@@ -1,4 +1,4 @@
-// Simple Texture Shader
+// Grid Shader
 
 #type vertex
 #version 430
@@ -28,11 +28,6 @@ uniform float u_Scale;
 uniform float u_Res;
 
 in vec2 v_TexCoord;
-
-/*void main()
-{
-	color = texture(u_Texture, v_TexCoord * 8.0);
-}*/
 
 float grid(vec2 st, float res)
 {
