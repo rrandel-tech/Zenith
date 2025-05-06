@@ -3,6 +3,8 @@
 
 #include <glad/glad.h>
 
+#include "Zenith/Renderer/Renderer.hpp"
+
 namespace Zenith {
 
 	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
@@ -28,28 +30,28 @@ namespace Zenith {
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glCreateVertexArrays(1, &m_RendererID);
 		});
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glDeleteVertexArrays(1, &m_RendererID);
 		});
 	}
 
 	void OpenGLVertexArray::Bind() const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glBindVertexArray(m_RendererID);
 		});
 	}
 
 	void OpenGLVertexArray::Unbind() const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glBindVertexArray(0);
 		});
 	}
@@ -61,7 +63,7 @@ namespace Zenith {
 		Bind();
 		vertexBuffer->Bind();
 
-		Renderer::Submit([=]() {
+		Renderer::Submit([this, vertexBuffer]() {
 			const auto & layout = vertexBuffer->GetLayout();
 			for (const auto& element : layout)
 			{

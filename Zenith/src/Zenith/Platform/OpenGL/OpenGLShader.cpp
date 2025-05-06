@@ -5,6 +5,10 @@
 #include <sstream>
 #include <limits>
 
+#include <glm/gtc/type_ptr.hpp>
+
+#include "Zenith/Renderer/Renderer.hpp"
+
 namespace Zenith {
 
 #define UNIFORM_LOGGING 0
@@ -42,7 +46,7 @@ namespace Zenith {
 		m_ShaderSource = PreProcess(source);
 		Parse();
 
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			if (m_RendererID)
 				glDeleteShader(m_RendererID);
 
@@ -67,7 +71,7 @@ namespace Zenith {
 
 	void OpenGLShader::Bind()
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glUseProgram(m_RendererID);
 		});
 	}
@@ -591,7 +595,7 @@ namespace Zenith {
 
 	void OpenGLShader::SetVSMaterialUniformBuffer(Buffer buffer)
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this, buffer]() {
 			glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);
 		});
@@ -599,7 +603,7 @@ namespace Zenith {
 
 	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this, buffer]() {
 			glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);
 		});
@@ -780,9 +784,18 @@ namespace Zenith {
 		});
 	}
 
-	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value)
+	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, bool bind)
 	{
-		UploadUniformMat4(name, value);
+		if (bind)
+		{
+			UploadUniformMat4(name, value);
+		}
+		else
+		{
+			int location = glGetUniformLocation(m_RendererID, name.c_str());
+			if (location != -1)
+				UploadUniformMat4(location, value);
+		}
 	}
 
 	void OpenGLShader::UploadUniformInt(uint32_t location, int32_t value)

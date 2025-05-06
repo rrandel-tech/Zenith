@@ -3,6 +3,8 @@
 
 #include <Glad/glad.h>
 
+#include "Zenith/Renderer/Renderer.hpp"
+
 namespace Zenith {
 
 	//////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +36,7 @@ namespace Zenith {
 	OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size, VertexBufferUsage usage)
 		: m_Size(size), m_Usage(usage)
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glCreateBuffers(1, &m_RendererID);
 			glNamedBufferData(m_RendererID, m_Size, nullptr, OpenGLUsage(m_Usage));
 		});
@@ -42,7 +44,7 @@ namespace Zenith {
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glDeleteBuffers(1, &m_RendererID);
 		});
 	}
@@ -51,14 +53,14 @@ namespace Zenith {
 	{
 		m_LocalData = Buffer::Copy(data, size);
 		m_Size = size;
-		Renderer::Submit([=]() {
+		Renderer::Submit([this, offset]() {
 			glNamedBufferSubData(m_RendererID, offset, m_Size, m_LocalData.Data);
 		});
 	}
 
 	void OpenGLVertexBuffer::Bind() const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 		});
 	}
@@ -72,7 +74,7 @@ namespace Zenith {
 	{
 		m_LocalData = Buffer::Copy(data, size);
 
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glCreateBuffers(1, &m_RendererID);
 			glNamedBufferData(m_RendererID, m_Size, m_LocalData.Data, GL_STATIC_DRAW);
 		});
@@ -80,7 +82,7 @@ namespace Zenith {
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glDeleteBuffers(1, &m_RendererID);
 		});
 	}
@@ -89,14 +91,14 @@ namespace Zenith {
 	{
 		m_LocalData = Buffer::Copy(data, size);
 		m_Size = size;
-		Renderer::Submit([=]() {
+		Renderer::Submit([this, offset]() {
 			glNamedBufferSubData(m_RendererID, offset, m_Size, m_LocalData.Data);
 		});
 	}
 
 	void OpenGLIndexBuffer::Bind() const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 		});
 	}

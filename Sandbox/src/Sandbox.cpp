@@ -107,8 +107,26 @@ public:
 		m_EnvironmentIrradiance.reset(Zenith::TextureCube::Create("Resources/Textures/environments/Arches_E_PineTree_Irradiance.tga"));
 		m_BRDFLUT.reset(Zenith::Texture2D::Create("Resources/Textures/BRDF_LUT.tga"));
 
-		m_Framebuffer.reset(Zenith::Framebuffer::Create(1280, 720, Zenith::FramebufferFormat::RGBA16F));
-		m_FinalPresentBuffer.reset(Zenith::Framebuffer::Create(1280, 720, Zenith::FramebufferFormat::RGBA8));
+		// Render Passes
+		Zenith::FramebufferSpecification geoFramebufferSpec;
+		geoFramebufferSpec.Width = 1280;
+		geoFramebufferSpec.Height = 720;
+		geoFramebufferSpec.Format = Zenith::FramebufferFormat::RGBA16F;
+		geoFramebufferSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+		Zenith::RenderPassSpecification geoRenderPassSpec;
+		geoRenderPassSpec.TargetFramebuffer = Zenith::Framebuffer::Create(geoFramebufferSpec);
+		m_GeoPass = Zenith::RenderPass::Create(geoRenderPassSpec);
+
+		Zenith::FramebufferSpecification compFramebufferSpec;
+		compFramebufferSpec.Width = 1280;
+		compFramebufferSpec.Height = 720;
+		compFramebufferSpec.Format = Zenith::FramebufferFormat::RGBA8;
+		compFramebufferSpec.ClearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+		Zenith::RenderPassSpecification compRenderPassSpec;
+		compRenderPassSpec.TargetFramebuffer = Zenith::Framebuffer::Create(compFramebufferSpec);
+		m_CompositePass = Zenith::RenderPass::Create(compRenderPassSpec);
 
 		float x = -4.0f;
 		float roughness = 0.0f;
@@ -196,8 +214,9 @@ public:
 		m_Camera.Update(ts);
 		auto viewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
 
-		m_Framebuffer->Bind();
-		Renderer::Clear();
+		m_Mesh->OnUpdate(ts);
+
+		Renderer::BeginRenderPass(m_GeoPass);
 
 		// TODO:
 		// Renderer::BeginScene(m_Camera);
@@ -257,31 +276,31 @@ public:
 		{
 			// Metals
 			for (int i = 0; i < 8; i++)
-				m_SphereMesh->Render(ts, glm::mat4(1.0f), m_MetalSphereMaterialInstances[i]);
+				Renderer::SubmitMesh(m_SphereMesh, glm::mat4(1.0f), m_MetalSphereMaterialInstances[i]);
 
 			// Dielectrics
 			for (int i = 0; i < 8; i++)
-				m_SphereMesh->Render(ts, glm::mat4(1.0f), m_DielectricSphereMaterialInstances[i]);
+				Renderer::SubmitMesh(m_SphereMesh, glm::mat4(1.0f), m_DielectricSphereMaterialInstances[i]);
 
 		}
 		else if (m_Scene == Scene::Model)
 		{
 			if (m_Mesh)
-				m_Mesh->Render(ts, m_Transform, m_MeshMaterial);
+				Renderer::SubmitMesh(m_Mesh, m_Transform, m_MeshMaterial);
 		}
 
 		m_GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
-		m_PlaneMesh->Render(ts, m_GridMaterial);
+		Renderer::SubmitMesh(m_PlaneMesh, glm::mat4(1.0f), m_GridMaterial);
 
-		m_Framebuffer->Unbind();
+		Renderer::EndRenderPass();
 
-		m_FinalPresentBuffer->Bind();
+		Renderer::BeginRenderPass(m_CompositePass);
 		m_HDRShader->Bind();
 		m_HDRShader->SetFloat("u_Exposure", m_Exposure);
-		m_Framebuffer->BindTexture();
+		m_GeoPass->GetSpecification().TargetFramebuffer->BindTexture();
 		m_FullscreenQuadVertexArray->Bind();
 		Renderer::DrawIndexed(m_FullscreenQuadVertexArray->GetIndexBuffer()->GetCount(), false);
-		m_FinalPresentBuffer->Unbind();
+		Renderer::EndRenderPass();
 	}
 
 	enum class PropertyFlag
@@ -603,11 +622,11 @@ public:
 		ZN_INFO("{0}, {1}", posX, posY);*/
 
 		auto viewportSize = ImGui::GetContentRegionAvail();
-		m_Framebuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		m_FinalPresentBuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		m_GeoPass->GetSpecification().TargetFramebuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		m_CompositePass->GetSpecification().TargetFramebuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 		m_Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		ImGui::Image((ImTextureID)(uintptr_t)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+		ImGui::Image((ImTextureID)(uintptr_t)m_CompositePass->GetSpecification().TargetFramebuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
 		// Gizmos
 		if (m_GizmoType != -1)
@@ -692,6 +711,7 @@ private:
 	Zenith::Ref<Zenith::Mesh> m_Mesh;
 	Zenith::Ref<Zenith::Mesh> m_SphereMesh, m_PlaneMesh;
 	Zenith::Ref<Zenith::Texture2D> m_BRDFLUT;
+	Zenith::Ref<Zenith::RenderPass> m_GeoPass, m_CompositePass;
 
 	Zenith::Ref<Zenith::MaterialInstance> m_MeshMaterial;
 	Zenith::Ref<Zenith::MaterialInstance> m_GridMaterial;
@@ -732,8 +752,6 @@ private:
 		bool UseTexture = false;
 	};
 	RoughnessInput m_RoughnessInput;
-
-	std::unique_ptr<Zenith::Framebuffer> m_Framebuffer, m_FinalPresentBuffer;
 
 	Zenith::Ref<Zenith::VertexArray> m_FullscreenQuadVertexArray;
 	Zenith::Ref<Zenith::TextureCube> m_EnvironmentCubeMap, m_EnvironmentIrradiance;

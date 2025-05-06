@@ -5,14 +5,14 @@
 
 namespace Zenith {
 
-	Zenith::Framebuffer* Framebuffer::Create(uint32_t width, uint32_t height, FramebufferFormat format)
+	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 	{
-		Zenith::Framebuffer* result = nullptr;
+		Ref<Framebuffer> result = nullptr;
 
 		switch (RendererAPI::Current())
 		{
 		case RendererAPIType::None:		return nullptr;
-		case RendererAPIType::OpenGL:	result = new OpenGLFramebuffer(width, height, format);
+		case RendererAPIType::OpenGL:	result = std::make_shared<OpenGLFramebuffer>(spec);
 		}
 		FramebufferPool::GetGlobal()->Add(result);
 		return result;
@@ -21,14 +21,10 @@ namespace Zenith {
 	FramebufferPool* FramebufferPool::s_Instance = new FramebufferPool;
 
 	FramebufferPool::FramebufferPool(uint32_t maxFBs /* = 32 */)
-	{
-
-	}
+	{}
 
 	FramebufferPool::~FramebufferPool()
-	{
-
-	}
+	{}
 
 	std::weak_ptr<Framebuffer> FramebufferPool::AllocateBuffer()
 	{
@@ -36,7 +32,7 @@ namespace Zenith {
 		return std::weak_ptr<Framebuffer>();
 	}
 
-	void FramebufferPool::Add(Framebuffer* framebuffer)
+	void FramebufferPool::Add(std::weak_ptr<Framebuffer> framebuffer)
 	{
 		m_Pool.push_back(framebuffer);
 	}

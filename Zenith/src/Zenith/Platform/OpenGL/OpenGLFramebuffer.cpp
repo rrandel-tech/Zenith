@@ -7,27 +7,27 @@
 namespace Zenith {
 
 
-	OpenGLFramebuffer::OpenGLFramebuffer(uint32_t width, uint32_t height, FramebufferFormat format)
-		: m_Width(width), m_Height(height), m_Format(format)
+	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
+		: m_Specification(spec)
 	{
-		Resize(width, height);
+		Resize(spec.Width, spec.Height);
 	}
 
 	OpenGLFramebuffer::~OpenGLFramebuffer()
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glDeleteFramebuffers(1, &m_RendererID);
 		});
 	}
 
 	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
 	{
-		if (m_Width == width && m_Height == height)
+		if (m_Specification.Width == width && m_Specification.Height == height)
 			return;
 
-		m_Width = width;
-		m_Height = height;
-		Renderer::Submit([=]() {
+		m_Specification.Width = width;
+		m_Specification.Height = height;
+		Renderer::Submit([this]() {
 			if (m_RendererID)
 			{
 				glDeleteFramebuffers(1, &m_RendererID);
@@ -42,13 +42,13 @@ namespace Zenith {
 			glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
 			
 			// TODO: Create Zenith texture object based on format here
-			if (m_Format == FramebufferFormat::RGBA16F)
+			if (m_Specification.Format == FramebufferFormat::RGBA16F)
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_FLOAT, nullptr);
 			}
-			else if (m_Format == FramebufferFormat::RGBA8)
+			else if (m_Specification.Format == FramebufferFormat::RGBA8)
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 			}
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -57,7 +57,7 @@ namespace Zenith {
 			glGenTextures(1, &m_DepthAttachment);
 			glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 			glTexImage2D(
-				GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Width, m_Height, 0,
+				GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0,
 				GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL
 			);
 
@@ -72,22 +72,22 @@ namespace Zenith {
 
 	void OpenGLFramebuffer::Bind() const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-			glViewport(0, 0, m_Width, m_Height);
+			glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 		});
 	}
 
 	void OpenGLFramebuffer::Unbind() const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this]() {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		});
 	}
 
 	void OpenGLFramebuffer::BindTexture(uint32_t slot) const
 	{
-		Renderer::Submit([=]() {
+		Renderer::Submit([this, slot]() {
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
 		});

@@ -2,6 +2,9 @@
 
 #include "RenderCommandQueue.hpp"
 #include "RendererAPI.hpp"
+#include "RenderPass.hpp"
+
+#include "Mesh.hpp"
 
 namespace Zenith {
 
@@ -42,8 +45,22 @@ namespace Zenith {
 		void WaitAndRender();
 
 		inline static Renderer& Get() { return *s_Instance; }
+
+		// ~Actual~ Renderer here... TODO: remove confusion later
+		static void BeginRenderPass(const Ref<RenderPass>& renderPass) { s_Instance->IBeginRenderPass(renderPass); }
+		static void EndRenderPass() { s_Instance->IEndRenderPass(); }
+
+		static void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<MaterialInstance>& overrideMaterial = nullptr) { s_Instance->SubmitMeshI(mesh, transform, overrideMaterial); }
+	private:
+		void IBeginRenderPass(const Ref<RenderPass>& renderPass);
+		void IEndRenderPass();
+
+		void SubmitMeshI(const Ref<Mesh>& mesh, const glm::mat4& transform, const Ref<MaterialInstance>& overrideMaterial);
+
 	private:
 		static Renderer* s_Instance;
+	private:
+		Ref<RenderPass> m_ActiveRenderPass;
 
 		RenderCommandQueue m_CommandQueue;
 		Scope<ShaderLibrary> m_ShaderLibrary;

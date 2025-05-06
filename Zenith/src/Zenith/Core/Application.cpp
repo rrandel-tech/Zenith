@@ -26,7 +26,7 @@ namespace Zenith {
 
 		m_Window = std::unique_ptr<Window>(Window::Create({ props.Name, props.WindowWidth, props.WindowHeight }));
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
-		m_Window->SetVSync(false);
+		m_Window->SetVSync(true);
 
 		m_ImGuiLayer = new ImGuiLayer("ImGui");
 		PushOverlay(m_ImGuiLayer);
@@ -142,7 +142,10 @@ namespace Zenith {
 		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
-			fb->Resize(width, height);
+		{
+			if (auto fbp = fb.lock())
+				fbp->Resize(width, height);
+		}
 
 		return false;
 	}

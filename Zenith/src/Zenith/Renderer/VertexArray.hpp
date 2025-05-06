@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+
 #include "Zenith/Renderer/Buffer.hpp"
 
 namespace Zenith {
