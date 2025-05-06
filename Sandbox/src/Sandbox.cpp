@@ -15,6 +15,7 @@
 #include <Zenith/Core/KeyCodes.hpp>
 
 #include "Zenith/Editor/SceneHierarchyPanel.hpp"
+#include "Zenith/Renderer/Renderer2D.hpp"
 
 static void ImGuiShowHelpMarker(const char* desc)
 {
@@ -96,14 +97,17 @@ public:
 
 			m_Scene->SetEnvironment(environment);
 
-			m_MeshEntity = m_Scene->CreateEntity();
+			m_MeshEntity = m_Scene->CreateEntity("Test Entity");
 
-			auto mesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Models/m1911/m1911.fbx");
-			//auto mesh = CreateRef<Mesh>("Resources/Meshes/cerberus/CerberusMaterials.fbx");
-			// auto mesh = CreateRef<Mesh>("Resources/Models/m1911/M1911Materials.fbx");
+			auto mesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Meshes/TestScene.fbx");
 			m_MeshEntity->SetMesh(mesh);
 
 			m_MeshMaterial = mesh->GetMaterial();
+
+			auto secondEntity = m_Scene->CreateEntity("Gun Entity");
+			secondEntity->Transform() = glm::translate(glm::mat4(1.0f), { 5, 5, 5 }) * glm::scale(glm::mat4(1.0f), { 10, 10, 10 });
+			mesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Models/m1911/m1911.fbx");
+			secondEntity->SetMesh(mesh);
 		}
 
 		// Sphere Scene
@@ -206,10 +210,21 @@ public:
 		if (m_RoughnessInput.TextureMap)
 			m_MeshMaterial->Set("u_RoughnessTexture", m_RoughnessInput.TextureMap);
 
+		if (m_AllowViewportCameraEvents)
+			m_Scene->GetCamera().OnUpdate(ts);
+
 		m_ActiveScene->OnUpdate(ts);
 
-		/*m_GridMaterial->Set("u_ViewProjection", viewProjection);
-	Renderer::SubmitMesh(m_PlaneMesh, glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)), m_GridMaterial);*/
+		if (m_DrawOnTopBoundingBoxes)
+		{
+			Zenith::Renderer::BeginRenderPass(Zenith::SceneRenderer::GetFinalRenderPass(), false);
+			auto viewProj = m_Scene->GetCamera().GetViewProjection();
+			Zenith::Renderer2D::BeginScene(viewProj, false);
+			// Zenith::Renderer2D::DrawQuad({ 0, 0, 0 }, { 4.0f, 5.0f }, { 1.0f, 1.0f, 0.5f, 1.0f });
+			Renderer::DrawAABB(m_MeshEntity->GetMesh());
+			Zenith::Renderer2D::EndScene();
+			Zenith::Renderer::EndRenderPass();
+		}
 	}
 
 	enum class PropertyFlag
@@ -217,17 +232,19 @@ public:
 		None = 0, ColorProperty = 1
 	};
 
-	void Property(const std::string& name, bool& value)
+	bool Property(const std::string& name, bool& value)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
 		ImGui::PushItemWidth(-1);
 
 		std::string id = "##" + name;
-		ImGui::Checkbox(id.c_str(), &value);
+		bool result = ImGui::Checkbox(id.c_str(), &value);
 
 		ImGui::PopItemWidth();
 		ImGui::NextColumn();
+
+		return result;
 	}
 
 	void Property(const std::string& name, float& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
@@ -303,6 +320,12 @@ public:
 		ImGui::NextColumn();
 	}
 
+	void ShowBoundingBoxes(bool show, bool onTop)
+	{
+		Zenith::SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
+		m_DrawOnTopBoundingBoxes = show && onTop;
+	}
+
 	virtual void OnImGuiRender() override
 	{
 		static bool p_open = true;
@@ -371,6 +394,11 @@ public:
 
 		Property("Radiance Prefiltering", m_RadiancePrefilter);
 		Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+
+		if (Property("Show Bounding Boxes", m_UIShowBoundingBoxes))
+			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+		if (m_UIShowBoundingBoxes && Property("On Top", m_UIShowBoundingBoxesOnTop))
+			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
 
 		ImGui::Columns(1);
 
@@ -552,20 +580,17 @@ public:
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");
 
-		/*float posX = ImGui::GetCursorScreenPos().x;
-		float posY = ImGui::GetCursorScreenPos().y;
-
-		auto [wx, wy] = Zenith::Application::Get().GetWindow().GetWindowPos();
-		posX -= wx;
-		posY -= wy;
-		ZN_INFO("{0}, {1}", posX, posY);*/
-
 		auto viewportSize = ImGui::GetContentRegionAvail();
-
 		Zenith::SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		m_ActiveScene->GetCamera().SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 		m_ActiveScene->GetCamera().SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		ImGui::Image((ImTextureID)(uintptr_t)(Zenith::SceneRenderer::GetFinalColorBufferRendererID()), viewportSize, { 0, 1 }, { 1, 0 });
+
+		static int counter = 0;
+		auto windowSize = ImGui::GetWindowSize();
+		ImVec2 minBound = ImGui::GetWindowPos();
+		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+		m_AllowViewportCameraEvents = ImGui::IsMouseHoveringRect(minBound, maxBound);
 
 		// Gizmos
 		if (m_GizmoType != -1)
@@ -616,9 +641,12 @@ public:
 		ImGui::End();
 	}
 
-	virtual void OnEvent(Zenith::Event& event) override
+	virtual void OnEvent(Zenith::Event& e) override
 	{
-		Zenith::EventDispatcher dispatcher(event);
+		if (m_AllowViewportCameraEvents)
+			m_Scene->GetCamera().OnEvent(e);
+
+		Zenith::EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<Zenith::KeyPressedEvent>(ZN_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
 	}
 
@@ -637,6 +665,19 @@ public:
 			break;
 		case ZN_KEY_R:
 			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		case ZN_KEY_G:
+			// Toggle grid
+			if (Zenith::Input::IsKeyPressed(ZN_KEY_LEFT_CONTROL))
+				Zenith::SceneRenderer::GetOptions().ShowGrid = !Zenith::SceneRenderer::GetOptions().ShowGrid;
+			break;
+		case ZN_KEY_B:
+			// Toggle bounding boxes 
+			if (Zenith::Input::IsKeyPressed(ZN_KEY_LEFT_CONTROL))
+			{
+				m_UIShowBoundingBoxes = !m_UIShowBoundingBoxes;
+				ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+			}
 			break;
 		}
 		return false;
@@ -716,6 +757,11 @@ private:
 	Zenith::Ref<Zenith::Texture2D> m_CheckerboardTex;
 
 	int m_GizmoType = -1; // -1 = no gizmo
+	bool m_AllowViewportCameraEvents = false;
+	bool m_DrawOnTopBoundingBoxes = false;
+
+	bool m_UIShowBoundingBoxes = false;
+	bool m_UIShowBoundingBoxesOnTop = false;
 };
 
 class Sandbox : public Zenith::Application
