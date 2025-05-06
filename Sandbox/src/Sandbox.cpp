@@ -1,6 +1,7 @@
 #include "Zenith.hpp"
 #include "Zenith/EntryPoint.hpp"
 
+#include "Zenith/ImGui/ImGuizmo.h"
 #include "Zenith/ImGui/ImGuiLayer.hpp"
 #include "imgui/imgui_internal.h"
 
@@ -11,6 +12,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <string>
+#include <Zenith/Core/KeyCodes.hpp>
 
 static void ImGuiShowHelpMarker(const char* desc)
 {
@@ -37,6 +39,50 @@ public:
 
 	virtual void OnAttach() override
 	{
+		// ImGui Colors
+		ImVec4* colors = ImGui::GetStyle().Colors;
+		colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+		colors[ImGuiCol_WindowBg] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f); // Window background
+		colors[ImGuiCol_ChildBg] = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+		colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+		colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.5f);
+		colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+		colors[ImGuiCol_FrameBg] = ImVec4(0.3f, 0.3f, 0.3f, 0.5f); // Widget backgrounds
+		colors[ImGuiCol_FrameBgHovered] = ImVec4(0.4f, 0.4f, 0.4f, 0.4f);
+		colors[ImGuiCol_FrameBgActive] = ImVec4(0.4f, 0.4f, 0.4f, 0.6f);
+		colors[ImGuiCol_TitleBg] = ImVec4(0.04f, 0.04f, 0.04f, 1.0f);
+		colors[ImGuiCol_TitleBgActive] = ImVec4(0.29f, 0.29f, 0.29f, 1.0f);
+		colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.0f, 0.0f, 0.0f, 0.51f);
+		colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.0f);
+		colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+		colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.0f);
+		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.0f);
+		colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.0f);
+		colors[ImGuiCol_CheckMark] = ImVec4(0.94f, 0.94f, 0.94f, 1.0f);
+		colors[ImGuiCol_SliderGrab] = ImVec4(0.51f, 0.51f, 0.51f, 0.7f);
+		colors[ImGuiCol_SliderGrabActive] = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
+		colors[ImGuiCol_Button] = ImVec4(0.44f, 0.44f, 0.44f, 0.4f);
+		colors[ImGuiCol_ButtonHovered] = ImVec4(0.46f, 0.47f, 0.48f, 1.0f);
+		colors[ImGuiCol_ButtonActive] = ImVec4(0.42f, 0.42f, 0.42f, 1.0f);
+		colors[ImGuiCol_Header] = ImVec4(0.7f, 0.7f, 0.7f, 0.31f);
+		colors[ImGuiCol_HeaderHovered] = ImVec4(0.7f, 0.7f, 0.7f, 0.8f);
+		colors[ImGuiCol_HeaderActive] = ImVec4(0.48f, 0.5f, 0.52f, 1.0f);
+		colors[ImGuiCol_Separator] = ImVec4(0.43f, 0.43f, 0.5f, 0.5f);
+		colors[ImGuiCol_SeparatorHovered] = ImVec4(0.72f, 0.72f, 0.72f, 0.78f);
+		colors[ImGuiCol_SeparatorActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.0f);
+		colors[ImGuiCol_ResizeGrip] = ImVec4(0.91f, 0.91f, 0.91f, 0.25f);
+		colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.81f, 0.81f, 0.81f, 0.67f);
+		colors[ImGuiCol_ResizeGripActive] = ImVec4(0.46f, 0.46f, 0.46f, 0.95f);
+		colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.0f);
+		colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.0f, 0.43f, 0.35f, 1.0f);
+		colors[ImGuiCol_PlotHistogram] = ImVec4(0.73f, 0.6f, 0.15f, 1.0f);
+		colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.0f, 0.6f, 0.0f, 1.0f);
+		colors[ImGuiCol_TextSelectedBg] = ImVec4(0.87f, 0.87f, 0.87f, 0.35f);
+		colors[ImGuiCol_DragDropTarget] = ImVec4(1.0f, 1.0f, 0.0f, 0.9f);
+		colors[ImGuiCol_NavHighlight] = ImVec4(0.60f, 0.6f, 0.6f, 1.0f);
+		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
+
 		using namespace glm;
 
 		m_Mesh.reset(new Zenith::Mesh("Resources/Models/m1911/m1911.fbx"));
@@ -90,7 +136,7 @@ public:
 			m_DielectricSphereMaterialInstances.push_back(mi);
 		}
 
-		// Create Quad
+		// Create fullscreen quad for final composite
 		x = -1;
 		float y = -1;
 		float width = 2, height = 2;
@@ -114,15 +160,25 @@ public:
 		data[3].Position = glm::vec3(x, y + height, 0);
 		data[3].TexCoord = glm::vec2(0, 1);
 
-		m_VertexBuffer.reset(Zenith::VertexBuffer::Create());
-		m_VertexBuffer->SetData(data, 4 * sizeof(QuadVertex));
+		m_FullscreenQuadVertexArray = Zenith::VertexArray::Create();
+		auto quadVB = Zenith::VertexBuffer::Create(data, 4 * sizeof(QuadVertex));
+		quadVB->SetLayout({
+			{ Zenith::ShaderDataType::Float3, "a_Position" },
+			{ Zenith::ShaderDataType::Float2, "a_TexCoord" }
+		});
 
-		uint32_t* indices = new uint32_t[6]{ 0, 1, 2, 2, 3, 0, };
-		m_IndexBuffer.reset(Zenith::IndexBuffer::Create());
-		m_IndexBuffer->SetData(indices, 6 * sizeof(uint32_t));
+		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0, };
+		auto quadIB = Zenith::IndexBuffer::Create(indices, 6 * sizeof(uint32_t));
+
+		m_FullscreenQuadVertexArray->AddVertexBuffer(quadVB);
+		m_FullscreenQuadVertexArray->SetIndexBuffer(quadIB);
+
+		// Set lights
 
 		m_Light.Direction = { -0.5f, -0.5f, 1.0f };
 		m_Light.Radiance = { 1.0f, 1.0f, 1.0f };
+
+		m_Transform = glm::scale(glm::mat4(1.0f), glm::vec3(m_MeshScale));
 	}
 
 	virtual void OnDetach() override
@@ -150,9 +206,8 @@ public:
 		m_QuadShader->Bind();
 		m_QuadShader->SetMat4("u_InverseVP", inverse(viewProjection));
 		m_EnvironmentIrradiance->Bind(0);
-		m_VertexBuffer->Bind();
-		m_IndexBuffer->Bind();
-		Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+		m_FullscreenQuadVertexArray->Bind();
+		Renderer::DrawIndexed(m_FullscreenQuadVertexArray->GetIndexBuffer()->GetCount(), false);
 
 		m_MeshMaterial->Set("u_AlbedoColor", m_AlbedoInput.Color);
 		m_MeshMaterial->Set("u_Metalness", m_MetalnessInput.Value);
@@ -168,21 +223,6 @@ public:
 		m_MeshMaterial->Set("u_RoughnessTexToggle", m_RoughnessInput.UseTexture ? 1.0f : 0.0f);
 		m_MeshMaterial->Set("u_EnvMapRotation", m_EnvMapRotation);
 
-#if 0
-		// Bind default texture unit
-		UploadUniformInt("u_Texture", 0);
-
-		// PBR shader textures
-		UploadUniformInt("u_AlbedoTexture", 1);
-		UploadUniformInt("u_NormalTexture", 2);
-		UploadUniformInt("u_MetalnessTexture", 3);
-		UploadUniformInt("u_RoughnessTexture", 4);
-
-		UploadUniformInt("u_EnvRadianceTex", 10);
-		UploadUniformInt("u_EnvIrradianceTex", 11);
-
-		UploadUniformInt("u_BRDFLUTTexture", 15);
-#endif
 		m_MeshMaterial->Set("u_EnvRadianceTex", m_EnvironmentCubeMap);
 		m_MeshMaterial->Set("u_EnvIrradianceTex", m_EnvironmentIrradiance);
 		m_MeshMaterial->Set("u_BRDFLUTTexture", m_BRDFLUT);
@@ -227,7 +267,7 @@ public:
 		else if (m_Scene == Scene::Model)
 		{
 			if (m_Mesh)
-				m_Mesh->Render(ts, scale(mat4(1.0f), vec3(m_MeshScale)), m_MeshMaterial);
+				m_Mesh->Render(ts, m_Transform, m_MeshMaterial);
 		}
 
 		m_GridMaterial->Set("u_MVP", viewProjection * glm::scale(glm::mat4(1.0f), glm::vec3(16.0f)));
@@ -239,9 +279,8 @@ public:
 		m_HDRShader->Bind();
 		m_HDRShader->SetFloat("u_Exposure", m_Exposure);
 		m_Framebuffer->BindTexture();
-		m_VertexBuffer->Bind();
-		m_IndexBuffer->Bind();
-		Renderer::DrawIndexed(m_IndexBuffer->GetCount(), false);
+		m_FullscreenQuadVertexArray->Bind();
+		Renderer::DrawIndexed(m_FullscreenQuadVertexArray->GetIndexBuffer()->GetCount(), false);
 		m_FinalPresentBuffer->Unbind();
 	}
 
@@ -561,7 +600,7 @@ public:
 		auto [wx, wy] = Zenith::Application::Get().GetWindow().GetWindowPos();
 		posX -= wx;
 		posY -= wy;
-		HZ_INFO("{0}, {1}", posX, posY);*/
+		ZN_INFO("{0}, {1}", posX, posY);*/
 
 		auto viewportSize = ImGui::GetContentRegionAvail();
 		m_Framebuffer->Resize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
@@ -569,6 +608,18 @@ public:
 		m_Camera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 		m_Camera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		ImGui::Image((ImTextureID)(uintptr_t)m_FinalPresentBuffer->GetColorAttachmentRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
+
+		// Gizmos
+		if (m_GizmoType != -1)
+		{
+			float rw = (float)ImGui::GetWindowWidth();
+			float rh = (float)ImGui::GetWindowHeight();
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
+			ImGuizmo::Manipulate(glm::value_ptr(m_Camera.GetViewMatrix()), glm::value_ptr(m_Camera.GetProjectionMatrix()), (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(m_Transform));
+		}
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 
@@ -610,7 +661,30 @@ public:
 	}
 
 	virtual void OnEvent(Zenith::Event& event) override
-	{}
+	{
+		Zenith::EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<Zenith::KeyPressedEvent>(ZN_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
+	}
+
+	bool OnKeyPressedEvent(Zenith::KeyPressedEvent& e)
+	{
+		switch (e.GetKeyCode())
+		{
+		case ZN_KEY_Q:
+			m_GizmoType = -1;
+			break;
+		case ZN_KEY_W:
+			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		case ZN_KEY_E:
+			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		case ZN_KEY_R:
+			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		}
+		return false;
+	}
 private:
 	Zenith::Ref<Zenith::Shader> m_QuadShader;
 	Zenith::Ref<Zenith::Shader> m_HDRShader;
@@ -661,8 +735,7 @@ private:
 
 	std::unique_ptr<Zenith::Framebuffer> m_Framebuffer, m_FinalPresentBuffer;
 
-	Zenith::Ref<Zenith::VertexBuffer> m_VertexBuffer;
-	Zenith::Ref<Zenith::IndexBuffer> m_IndexBuffer;
+	Zenith::Ref<Zenith::VertexArray> m_FullscreenQuadVertexArray;
 	Zenith::Ref<Zenith::TextureCube> m_EnvironmentCubeMap, m_EnvironmentIrradiance;
 
 	Zenith::Camera m_Camera;
@@ -690,6 +763,9 @@ private:
 
 	// Editor resources
 	Zenith::Ref<Zenith::Texture2D> m_CheckerboardTex;
+
+	int m_GizmoType = -1; // -1 = no gizmo
+	glm::mat4 m_Transform;
 };
 
 class Sandbox : public Zenith::Application

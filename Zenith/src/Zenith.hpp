@@ -26,6 +26,7 @@
 #include "Zenith/Renderer/Renderer.hpp"
 #include "Zenith/Renderer/Framebuffer.hpp"
 #include "Zenith/Renderer/Buffer.hpp"
+#include "Zenith/Renderer/VertexArray.hpp"
 #include "Zenith/Renderer/Texture.hpp"
 #include "Zenith/Renderer/Shader.hpp"
 #include "Zenith/Renderer/Mesh.hpp"
