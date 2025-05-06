@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Zenith/Core/Base.hpp"
+#include "Zenith/Core/TimeStep.hpp"
 #include "Zenith/Core/Window.hpp"
 #include "Zenith/Core/LayerStack.hpp"
 
@@ -30,7 +31,7 @@ namespace Zenith {
 
 		virtual void OnInit() {}
 		virtual void OnShutdown() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(Timestep ts) {}
 
 		virtual void OnEvent(Event& event);
 
@@ -40,18 +41,25 @@ namespace Zenith {
 		void PopOverlay(Layer* layer);
 		void RenderImGui();
 
+		std::string OpenFile(const std::string& filter) const;
+
 		Window& GetWindow() const { return *m_Window; }
+
 		static Application& Get() { return *s_Instance; }
 
+		float GetTime() const; // TODO: This should be in "Platform"
 	private:
 		bool OnWindowResize(WindowResizeEvent& e);
 		bool OnWindowClose(WindowCloseEvent& e);
 
 	private:
 		std::unique_ptr<Window> m_Window;
-		bool m_Running = true;
+		bool m_Running = true, m_Minimized = false;
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer;
+		Timestep m_TimeStep;
+
+		float m_LastFrameTime = 0.0f;
 
 		static Application* s_Instance;
 	};

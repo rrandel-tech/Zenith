@@ -37,6 +37,8 @@ namespace Zenith {
 		virtual void SetData(void* buffer, uint32_t size, uint32_t offset = 0);
 		virtual void Bind() const;
 
+		virtual uint32_t GetCount() const { return m_Size / sizeof(uint32_t); }
+
 		virtual uint32_t GetSize() const { return m_Size; }
 		virtual RendererID GetRendererID() const { return m_RendererID; }
 	private:

@@ -17,8 +17,8 @@ namespace Zenith {
 	ImGuiLayer::ImGuiLayer() = default;
 
 	ImGuiLayer::ImGuiLayer(const std::string& name)
-		: Layer(name) {
-	}
+		: Layer(name)
+	{}
 
 	ImGuiLayer::~ImGuiLayer() = default;
 
@@ -33,23 +33,27 @@ namespace Zenith {
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Multi-viewport
 
+		ImFont* pFont = io.Fonts->AddFontFromFileTTF("Resources/Fonts/Inter/Inter_18pt-Regular.ttf", 18.0f);
+		io.FontDefault = io.Fonts->Fonts.back();
+
 		// Apply dark theme
 		ImGui::StyleColorsDark();
 
 		// Match platform windows to main window style
+		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			ImGuiStyle& style = ImGui::GetStyle();
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
+		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.15f, 0.15f, 0.15f, style.Colors[ImGuiCol_WindowBg].w);
 
 		// Setup platform/renderer bindings
 		auto& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 410");
+		ImGui_ImplOpenGL3_Init("#version 450");
 	}
 
 	void ImGuiLayer::OnDetach()

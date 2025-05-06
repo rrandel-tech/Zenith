@@ -33,10 +33,10 @@ namespace Zenith {
 	void Renderer::SetClearColor(float r, float g, float b, float a)
 	{}
 
-	void Renderer::DrawIndexed(uint32_t count)
+	void Renderer::DrawIndexed(uint32_t count, bool depthTest)
 	{
 		Renderer::Submit ([=]() {
-			RendererAPI::DrawIndexed(count);
+			RendererAPI::DrawIndexed(count, depthTest);
 		});
 	}
 

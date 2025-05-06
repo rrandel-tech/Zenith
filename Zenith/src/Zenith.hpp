@@ -13,6 +13,7 @@
 
 #include "Zenith/Core/Application.hpp"
 #include "Zenith/Core/Log.hpp"
+#include "Zenith/Core/TimeStep.hpp"
 #include "Zenith/Core/Input.hpp"
 
 #include "Zenith/Core/Events/Event.hpp"
@@ -23,5 +24,10 @@
 #include <imgui/imgui.h>
 
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/Framebuffer.hpp"
 #include "Zenith/Renderer/Buffer.hpp"
+#include "Zenith/Renderer/Texture.hpp"
 #include "Zenith/Renderer/Shader.hpp"
+#include "Zenith/Renderer/Mesh.hpp"
+#include "Zenith/Renderer/Camera.hpp"
+#include "Zenith/Renderer/Material.hpp"

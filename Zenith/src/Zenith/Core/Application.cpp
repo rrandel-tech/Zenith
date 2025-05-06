@@ -2,10 +2,17 @@
 #include "Application.hpp"
 
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/Framebuffer.hpp"
 
 #include "FatalSignal.hpp"
 
 #include <GLFW/glfw3.h>
+
+#include <imgui/imgui.h>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <Windows.h>
 
 namespace Zenith {
 
@@ -65,6 +72,15 @@ namespace Zenith {
 	void Application::RenderImGui()
 	{
 		m_ImGuiLayer->Begin();
+
+		ImGui::Begin("Renderer");
+		auto& caps = RendererAPI::GetCapabilities();
+		ImGui::Text("Vendor: %s", caps.Vendor.c_str());
+		ImGui::Text("Renderer: %s", caps.Renderer.c_str());
+		ImGui::Text("Version: %s", caps.Version.c_str());
+		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
+		ImGui::End();
+
 		for (Layer* layer : m_LayerStack)
 			layer->OnImGuiRender();
 
@@ -76,16 +92,22 @@ namespace Zenith {
 		OnInit();
 		while (m_Running)
 		{
-			for (Layer* layer : m_LayerStack)
-				layer->OnUpdate();
+			if (!m_Minimized)
+			{
+				for (Layer* layer : m_LayerStack)
+					layer->OnUpdate(m_TimeStep);
 
-			// Render ImGui on render thread
-			Application* app = this;
-			Renderer::Submit([app]() { app->RenderImGui(); });
+				// Render ImGui on render thread
+				Application* app = this;
+				Renderer::Submit([app]() { app->RenderImGui(); });
 
-			Renderer::Get().WaitAndRender();
-
+				Renderer::Get().WaitAndRender();
+			}
 			m_Window->OnUpdate();
+
+			float time = GetTime();
+			m_TimeStep = time - m_LastFrameTime;
+			m_LastFrameTime = time;
 		}
 		OnShutdown();
 	}
@@ -107,8 +129,20 @@ namespace Zenith {
 			return;
 	}
 
-	bool Application::OnWindowResize(WindowResizeEvent&)
+	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		int width = e.GetWidth(), height = e.GetHeight();
+		if (width == 0 || height == 0)
+		{
+			m_Minimized = true;
+			return false;
+		}
+		m_Minimized = false;
+		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
+		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
+		for (auto& fb : fbs)
+			fb->Resize(width, height);
+
 		return false;
 	}
 
@@ -116,6 +150,36 @@ namespace Zenith {
 	{
 		m_Running = false;
 		return true;
+	}
+
+	std::string Application::OpenFile(const std::string& filter) const
+	{
+		OPENFILENAMEA ofn;       // common dialog box structure
+		CHAR szFile[260] = { 0 };       // if using TCHAR macros
+
+		// Initialize OPENFILENAME
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = glfwGetWin32Window((GLFWwindow*)m_Window->GetNativeWindow());
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = "All\0*.*\0";
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = NULL;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+		if (GetOpenFileNameA(&ofn) == TRUE)
+		{
+			return ofn.lpstrFile;
+		}
+		return std::string();
+	}
+
+	float Application::GetTime() const
+	{
+		return (float)glfwGetTime();
 	}
 
 }

@@ -57,6 +57,8 @@ namespace Zenith {
 		};
 
 		GLFWwindow* m_Window = nullptr;
+		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
+
 		WindowData m_Data;
 		float m_LastFrameTime = 0.0f;
 	};

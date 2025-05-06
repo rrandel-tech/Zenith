@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Zenith/Core/Base.hpp"
+#include "Zenith/Core/Buffer.hpp"
+
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Renderer/ShaderUniform.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
@@ -55,6 +58,7 @@ namespace Zenith
 		byte Buffer[N];
 		UniformDecl Uniforms[U];
 		std::ptrdiff_t Cursor = 0;
+		int Index = 0;
 
 		virtual const byte* GetBuffer() const override { return Buffer; }
 		virtual const UniformDecl* GetUniforms() const override { return Uniforms; }
@@ -66,17 +70,33 @@ namespace Zenith
 		template<>
 		void Push(const std::string& name, const float& data)
 		{
-			Uniforms[0] = { UniformType::Float, Cursor, name };
+			Uniforms[Index++] = { UniformType::Float, Cursor, name };
 			memcpy(Buffer + Cursor, &data, sizeof(float));
 			Cursor += sizeof(float);
 		}
 
 		template<>
+		void Push(const std::string& name, const glm::vec3& data)
+		{
+			Uniforms[Index++] = { UniformType::Float3, Cursor, name };
+			memcpy(Buffer + Cursor, glm::value_ptr(data), sizeof(glm::vec3));
+			Cursor += sizeof(glm::vec3);
+		}
+
+		template<>
 		void Push(const std::string& name, const glm::vec4& data)
 		{
-			Uniforms[0] = { UniformType::Float4, Cursor, name };
+			Uniforms[Index++] = { UniformType::Float4, Cursor, name };
 			memcpy(Buffer + Cursor, glm::value_ptr(data), sizeof(glm::vec4));
 			Cursor += sizeof(glm::vec4);
+		}
+
+		template<>
+		void Push(const std::string& name, const glm::mat4& data)
+		{
+			Uniforms[Index++] = { UniformType::Matrix4x4, Cursor, name };
+			memcpy(Buffer + Cursor, glm::value_ptr(data), sizeof(glm::mat4));
+			Cursor += sizeof(glm::mat4);
 		}
 
 	};
@@ -84,14 +104,39 @@ namespace Zenith
 	class Shader
 	{
 	public:
-		virtual void Bind() = 0;
+		using ShaderReloadedCallback = std::function<void()>;
 
+		virtual void Reload() = 0;
+
+		virtual void Bind() = 0;
 		virtual void UploadUniformBuffer(const UniformBufferBase& uniformBuffer) = 0;
+
+		// Temporary while we don't have materials
+		virtual void SetFloat(const std::string& name, float value) = 0;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
+		virtual void SetMat4FromRenderThread(const std::string& name, const glm::mat4& value) = 0;
+
+		virtual const std::string& GetName() const = 0;
 
 		// Represents a complete shader program stored in a single file.
 		// Note: currently for simplicity this is simply a string filepath, however
 		//			in the future this will be an asset object + metadata
 		static Shader* Create(const std::string& filepath);
+
+		virtual void SetVSMaterialUniformBuffer(Buffer buffer) = 0;
+		virtual void SetPSMaterialUniformBuffer(Buffer buffer) = 0;
+
+		virtual const ShaderUniformBufferList& GetVSRendererUniforms() const = 0;
+		virtual const ShaderUniformBufferList& GetPSRendererUniforms() const = 0;
+		virtual const ShaderUniformBufferDeclaration& GetVSMaterialUniformBuffer() const = 0;
+		virtual const ShaderUniformBufferDeclaration& GetPSMaterialUniformBuffer() const = 0;
+
+		virtual const ShaderResourceList& GetResources() const = 0;
+
+		virtual void AddShaderReloadedCallback(const ShaderReloadedCallback& callback) = 0;
+
+		// Temporary, before we have an asset manager
+		static std::vector<Shader*> s_AllShaders;
 	};
 
 }

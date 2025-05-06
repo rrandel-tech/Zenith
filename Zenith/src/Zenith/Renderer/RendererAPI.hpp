@@ -10,6 +10,16 @@ namespace Zenith {
 		OpenGL
 	};
 
+	struct RenderAPICapabilities
+	{
+		std::string Vendor;
+		std::string Renderer;
+		std::string Version;
+
+		int MaxSamples;
+		float MaxAnisotropy;
+	};
+
 	class RendererAPI
 	{
 	public:
@@ -19,7 +29,13 @@ namespace Zenith {
 		static void Clear(float r, float g, float b, float a);
 		static void SetClearColor(float r, float g, float b, float a);
 
-		static void DrawIndexed(uint32_t count);
+		static void DrawIndexed(uint32_t count, bool depthTest = true);
+
+		static RenderAPICapabilities& GetCapabilities()
+		{
+			static RenderAPICapabilities capabilities;
+			return capabilities;
+		}
 
 		static RendererAPIType Current() { return s_CurrentRendererAPI; }
 	private:

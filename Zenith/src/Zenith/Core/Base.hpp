@@ -57,3 +57,16 @@ namespace Zenith
 #define BIT(x) (1 << x)
 
 #define ZN_BIND_EVENT_FN(fn) std::bind(&##fn, this, std::placeholders::_1)
+
+// Pointer wrappers
+namespace Zenith {
+
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+
+	using byte = uint8_t;
+
+}

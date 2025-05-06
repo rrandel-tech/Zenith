@@ -23,6 +23,7 @@ project "Zenith"
 	filter "system:windows"
 		systemversion "latest"
 		defines { "ZN_PLATFORM_WINDOWS" }
+		links { "opengl32.lib" }
 
 	filter "system:linux"
 		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID" }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Zenith/Core/Base.hpp"
+#include "Zenith/Core/TimeStep.hpp"
 
 namespace Zenith {
 
@@ -12,7 +13,7 @@ namespace Zenith {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(Timestep ts) {}
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}
 
