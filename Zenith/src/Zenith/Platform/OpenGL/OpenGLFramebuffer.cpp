@@ -9,7 +9,7 @@ namespace Zenith {
 	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
 		: m_Specification(spec)
 	{
-		Resize(spec.Width, spec.Height);
+		Resize(spec.Width, spec.Height, true);
 	}
 
 	OpenGLFramebuffer::~OpenGLFramebuffer()
@@ -19,7 +19,7 @@ namespace Zenith {
 			});
 	}
 
-	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
+	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height, bool forceRecreate)
 	{
 		if (m_Specification.Width == width && m_Specification.Height == height)
 			return;
@@ -44,20 +44,17 @@ namespace Zenith {
 					glCreateTextures(GL_TEXTURE_2D_MULTISAMPLE, 1, &m_ColorAttachment);
 					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_ColorAttachment);
 
-					// TODO: Create Hazel texture object based on format here
+					// TODO: Create Zenith texture object based on format here
 					if (m_Specification.Format == FramebufferFormat::RGBA16F)
 					{
 						glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specification.Samples, GL_RGBA16F, m_Specification.Width, m_Specification.Height, GL_FALSE);
-						//glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specification.Samples, GL_RGBA16F, m_Specification.Width, m_Specification.Height, GL_FALSE);
 					}
 					else if (m_Specification.Format == FramebufferFormat::RGBA8)
 					{
-						// glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, m_Specification.Width, m_Specification.Height, GL_TRUE);
 						glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specification.Samples, GL_RGBA8, m_Specification.Width, m_Specification.Height, GL_FALSE);
 					}
 					// glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 					// glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					// glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_ColorAttachment, 0);
 					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 				}
 				else
@@ -65,7 +62,7 @@ namespace Zenith {
 					glCreateTextures(GL_TEXTURE_2D, 1, &m_ColorAttachment);
 					glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
 
-					// TODO: Create Hazel texture object based on format here
+					// TODO: Create Zenith texture object based on format here
 					if (m_Specification.Format == FramebufferFormat::RGBA16F)
 					{
 						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_FLOAT, nullptr);
@@ -83,10 +80,8 @@ namespace Zenith {
 				{
 					glCreateTextures(GL_TEXTURE_2D_MULTISAMPLE, 1, &m_DepthAttachment);
 					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_DepthAttachment);
-					// glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, GL_TRUE);
 					glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Specification.Samples, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, GL_FALSE);
 					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-					// glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, m_DepthAttachment, 0);
 				}
 				else
 				{
@@ -99,11 +94,11 @@ namespace Zenith {
 					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 				}
 
-				// glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ColorAttachment, 0);
 				if (multisample)
 					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_ColorAttachment, 0);
 				else
 					glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ColorAttachment, 0);
+
 				glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, m_DepthAttachment, 0);
 
 				ZN_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");

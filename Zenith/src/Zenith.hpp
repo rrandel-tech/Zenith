@@ -21,6 +21,9 @@
 #include "Zenith/Core/Events/KeyEvent.hpp"
 #include "Zenith/Core/Events/MouseEvent.hpp"
 
+#include "Zenith/Core/Math/AABB.hpp"
+#include "Zenith/Core/Math/Ray.hpp"
+
 #include <imgui/imgui.h>
 
 #include "Zenith/Renderer/Renderer.hpp"
