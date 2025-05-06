@@ -2,7 +2,7 @@ include "Dependencies.lua"
 
 workspace "Zenith"
 	configurations { "Debug", "Debug-AS", "Release", "Dist" }
-	startproject "Sandbox"
+	startproject "Zenith-Editor"
 		conformancemode "On"
 
 	language "C++"
@@ -60,6 +60,6 @@ group "Core"
 include "Zenith"
 group ""
 
-group "Misc"
-include "Sandbox"
+group "Tools"
+include "Zenith-Editor"
 group ""

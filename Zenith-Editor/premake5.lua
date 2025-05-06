@@ -1,4 +1,4 @@
-project "Sandbox"
+project "Zenith-Editor"
 	kind "ConsoleApp"
 
 	targetdir ("../bin/" .. outputdir .. "/%{prj.name}")

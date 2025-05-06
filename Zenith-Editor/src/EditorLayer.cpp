@@ -1,46 +1,33 @@
-#include "Zenith.hpp"
-#include "Zenith/EntryPoint.hpp"
+#include "EditorLayer.hpp"
 
 #include "Zenith/ImGui/ImGuizmo.h"
-#include "Zenith/ImGui/ImGuiLayer.hpp"
-#include "imgui/imgui_internal.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-
-#include <string>
-#include <Zenith/Core/KeyCodes.hpp>
-
-#include "Zenith/Editor/SceneHierarchyPanel.hpp"
 #include "Zenith/Renderer/Renderer2D.hpp"
 
-static void ImGuiShowHelpMarker(const char* desc)
-{
-	ImGui::TextDisabled("(?)");
-	if (ImGui::IsItemHovered())
+namespace Zenith {
+
+	static void ImGuiShowHelpMarker(const char* desc)
 	{
-		ImGui::BeginTooltip();
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-		ImGui::TextUnformatted(desc);
-		ImGui::PopTextWrapPos();
-		ImGui::EndTooltip();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted(desc);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
 	}
-}
 
-class EditorLayer : public Zenith::Layer
-{
-public:
-	EditorLayer()
+	EditorLayer::EditorLayer()
 		: m_SceneType(SceneType::Model)
-	{}
+	{
+	}
 
-	virtual ~EditorLayer()
-	{}
+	EditorLayer::~EditorLayer()
+	{
+	}
 
-	virtual void OnAttach() override
+	void EditorLayer::OnAttach()
 	{
 		// ImGui Colors
 		ImVec4* colors = ImGui::GetStyle().Colors;
@@ -88,36 +75,36 @@ public:
 
 		using namespace glm;
 
-		auto environment = Zenith::Environment::Load("Resources/Env/birchwood_4k.hdr");
+		auto environment = Environment::Load("Resources/Env/birchwood_4k.hdr");
 
 		// Model Scene
 		{
-			m_Scene = Zenith::CreateRef<Zenith::Scene>("Model Scene");
-			m_Scene->SetCamera(Zenith::Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+			m_Scene = CreateRef<Scene>("Model Scene");
+			m_Scene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
 
 			m_Scene->SetEnvironment(environment);
 
 			m_MeshEntity = m_Scene->CreateEntity("Test Entity");
 
-			auto mesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Meshes/TestScene.fbx");
+			auto mesh = CreateRef<Mesh>("Resources/Meshes/TestScene.fbx");
 			m_MeshEntity->SetMesh(mesh);
 
 			m_MeshMaterial = mesh->GetMaterial();
 
 			auto secondEntity = m_Scene->CreateEntity("Gun Entity");
 			secondEntity->Transform() = glm::translate(glm::mat4(1.0f), { 5, 5, 5 }) * glm::scale(glm::mat4(1.0f), { 10, 10, 10 });
-			mesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Models/m1911/M1911Materials.fbx");
+			mesh = CreateRef<Mesh>("Resources/Models/m1911/M1911Materials.fbx");
 			secondEntity->SetMesh(mesh);
 		}
 
 		// Sphere Scene
 		{
-			m_SphereScene = Zenith::CreateRef<Zenith::Scene>("PBR Sphere Scene");
-			m_SphereScene->SetCamera(Zenith::Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
+			m_SphereScene = CreateRef<Scene>("PBR Sphere Scene");
+			m_SphereScene->SetCamera(Camera(glm::perspectiveFov(glm::radians(45.0f), 1280.0f, 720.0f, 0.1f, 10000.0f)));
 
 			m_SphereScene->SetEnvironment(environment);
 
-			auto sphereMesh = Zenith::CreateRef<Zenith::Mesh>("Resources/Models/Sphere1m.fbx");
+			auto sphereMesh = CreateRef<Mesh>("Resources/Models/Sphere1m.fbx");
 			m_SphereBaseMaterial = sphereMesh->GetMaterial();
 
 			float x = -4.0f;
@@ -126,7 +113,7 @@ public:
 			{
 				auto sphereEntity = m_SphereScene->CreateEntity();
 
-				Zenith::Ref<Zenith::MaterialInstance> mi = CreateRef<Zenith::MaterialInstance>(m_SphereBaseMaterial);
+				Ref<MaterialInstance> mi = CreateRef<MaterialInstance>(m_SphereBaseMaterial);
 				mi->Set("u_Metalness", 1.0f);
 				mi->Set("u_Roughness", roughness);
 				x += 1.1f;
@@ -144,7 +131,7 @@ public:
 			{
 				auto sphereEntity = m_SphereScene->CreateEntity();
 
-				Zenith::Ref<Zenith::MaterialInstance> mi(new Zenith::MaterialInstance(m_SphereBaseMaterial));
+				Ref<MaterialInstance> mi(new MaterialInstance(m_SphereBaseMaterial));
 				mi->Set("u_Metalness", 0.0f);
 				mi->Set("u_Roughness", roughness);
 				x += 1.1f;
@@ -158,12 +145,12 @@ public:
 		}
 
 		m_ActiveScene = m_Scene;
-		m_SceneHierarchyPanel = CreateScope<Zenith::SceneHierarchyPanel>(m_ActiveScene);
+		m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_ActiveScene);
 
-		m_PlaneMesh.reset(new Zenith::Mesh("Resources/Models/Plane1m.obj"));
+		m_PlaneMesh.reset(new Mesh("Resources/Models/Plane1m.obj"));
 
 		// Editor
-		m_CheckerboardTex = Zenith::Texture2D::Create("Resources/Editor/Checkerboard.tga");
+		m_CheckerboardTex = Texture2D::Create("Resources/Editor/Checkerboard.tga");
 
 		// Set lights
 		auto& light = m_Scene->GetLight();
@@ -173,10 +160,11 @@ public:
 		m_CurrentlySelectedTransform = &m_MeshEntity->Transform();
 	}
 
-	virtual void OnDetach() override
-	{}
+	void EditorLayer::OnDetach()
+	{
+	}
 
-	virtual void OnUpdate(Zenith::Timestep ts) override
+	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		// THINGS TO LOOK AT:
 		// - BRDF LUT
@@ -238,12 +226,7 @@ public:
 		}
 	}
 
-	enum class PropertyFlag
-	{
-		None = 0, ColorProperty = 1
-	};
-
-	bool Property(const std::string& name, bool& value)
+	bool EditorLayer::Property(const std::string& name, bool& value)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
@@ -258,7 +241,7 @@ public:
 		return result;
 	}
 
-	void Property(const std::string& name, float& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
+	void EditorLayer::Property(const std::string& name, float& value, float min, float max, EditorLayer::PropertyFlag flags)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
@@ -271,12 +254,12 @@ public:
 		ImGui::NextColumn();
 	}
 
-	void Property(const std::string& name, glm::vec2& value, PropertyFlag flags)
+	void EditorLayer::Property(const std::string& name, glm::vec2& value, EditorLayer::PropertyFlag flags)
 	{
 		Property(name, value, -1.0f, 1.0f, flags);
 	}
 
-	void Property(const std::string& name, glm::vec2& value, float min, float max, PropertyFlag flags)
+	void EditorLayer::Property(const std::string& name, glm::vec2& value, float min, float max, EditorLayer::PropertyFlag flags)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
@@ -289,12 +272,12 @@ public:
 		ImGui::NextColumn();
 	}
 
-	void Property(const std::string& name, glm::vec3& value, PropertyFlag flags)
+	void EditorLayer::Property(const std::string& name, glm::vec3& value, EditorLayer::PropertyFlag flags)
 	{
 		Property(name, value, -1.0f, 1.0f, flags);
 	}
 
-	void Property(const std::string& name, glm::vec3& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
+	void EditorLayer::Property(const std::string& name, glm::vec3& value, float min, float max, EditorLayer::PropertyFlag flags)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
@@ -310,13 +293,14 @@ public:
 		ImGui::NextColumn();
 	}
 
-	void Property(const std::string& name, glm::vec4& value, PropertyFlag flags)
+	void EditorLayer::Property(const std::string& name, glm::vec4& value, EditorLayer::PropertyFlag flags)
 	{
 		Property(name, value, -1.0f, 1.0f, flags);
 	}
 
-	void Property(const std::string& name, glm::vec4& value, float min = -1.0f, float max = 1.0f, PropertyFlag flags = PropertyFlag::None)
+	void EditorLayer::Property(const std::string& name, glm::vec4& value, float min, float max, EditorLayer::PropertyFlag flags)
 	{
+
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
 		ImGui::PushItemWidth(-1);
@@ -331,13 +315,13 @@ public:
 		ImGui::NextColumn();
 	}
 
-	void ShowBoundingBoxes(bool show, bool onTop)
+	void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
 	{
-		Zenith::SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
+		SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
 		m_DrawOnTopBoundingBoxes = show && onTop;
 	}
 
-	virtual void OnImGuiRender() override
+	void EditorLayer::OnImGuiRender()
 	{
 		static bool p_open = true;
 
@@ -360,6 +344,10 @@ public:
 			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 		}
 
+		// When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+		//if (opt_flags & ImGuiDockNodeFlags_PassthruDockspace)
+		//	window_flags |= ImGuiWindowFlags_NoBackground;
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("DockSpace Demo", &p_open, window_flags);
 		ImGui::PopStyleVar();
@@ -377,7 +365,6 @@ public:
 
 		// Editor Panel ------------------------------------------------------------------------------
 		ImGui::Begin("Model");
-
 		if (ImGui::RadioButton("Spheres", (int*)&m_SceneType, (int)SceneType::Spheres))
 			m_ActiveScene = m_SphereScene;
 		ImGui::SameLine();
@@ -388,9 +375,9 @@ public:
 
 		if (ImGui::Button("Load Environment Map"))
 		{
-			std::string filename = Zenith::Application::Get().OpenFile("*.hdr");
+			std::string filename = Application::Get().OpenFile("*.hdr");
 			if (filename != "")
-				m_ActiveScene->SetEnvironment(Zenith::Environment::Load(filename));
+				m_ActiveScene->SetEnvironment(Environment::Load(filename));
 		}
 
 		ImGui::SliderFloat("Skybox LOD", &m_Scene->GetSkyboxLod(), 0.0f, 11.0f);
@@ -426,10 +413,10 @@ public:
 			ImGui::Text(path.c_str()); ImGui::SameLine();
 			if (ImGui::Button("...##Mesh"))
 			{
-				std::string filename = Zenith::Application::Get().OpenFile("");
+				std::string filename = Application::Get().OpenFile("");
 				if (filename != "")
 				{
-					auto newMesh = Zenith::CreateRef<Zenith::Mesh>(filename);
+					auto newMesh = CreateRef<Mesh>(filename);
 					// m_MeshMaterial.reset(new MaterialInstance(newMesh->GetMaterial()));
 					// m_MeshEntity->SetMaterial(m_MeshMaterial);
 					m_MeshEntity->SetMesh(newMesh);
@@ -459,9 +446,9 @@ public:
 					}
 					if (ImGui::IsItemClicked())
 					{
-						std::string filename = Zenith::Application::Get().OpenFile("");
+						std::string filename = Application::Get().OpenFile("");
 						if (filename != "")
-							m_AlbedoInput.TextureMap = (Zenith::Texture2D::Create(filename, m_AlbedoInput.SRGB));
+							m_AlbedoInput.TextureMap = Texture2D::Create(filename, m_AlbedoInput.SRGB);
 					}
 				}
 				ImGui::SameLine();
@@ -470,7 +457,7 @@ public:
 				if (ImGui::Checkbox("sRGB##AlbedoMap", &m_AlbedoInput.SRGB))
 				{
 					if (m_AlbedoInput.TextureMap)
-						m_AlbedoInput.TextureMap = (Zenith::Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), m_AlbedoInput.SRGB));
+						m_AlbedoInput.TextureMap = Texture2D::Create(m_AlbedoInput.TextureMap->GetPath(), m_AlbedoInput.SRGB);
 				}
 				ImGui::EndGroup();
 				ImGui::SameLine();
@@ -497,9 +484,9 @@ public:
 					}
 					if (ImGui::IsItemClicked())
 					{
-						std::string filename = Zenith::Application::Get().OpenFile("");
+						std::string filename = Application::Get().OpenFile("");
 						if (filename != "")
-							m_NormalInput.TextureMap = (Zenith::Texture2D::Create(filename));
+							m_NormalInput.TextureMap = Texture2D::Create(filename);
 					}
 				}
 				ImGui::SameLine();
@@ -526,9 +513,9 @@ public:
 					}
 					if (ImGui::IsItemClicked())
 					{
-						std::string filename = Zenith::Application::Get().OpenFile("");
+						std::string filename = Application::Get().OpenFile("");
 						if (filename != "")
-							m_MetalnessInput.TextureMap = (Zenith::Texture2D::Create(filename));
+							m_MetalnessInput.TextureMap = Texture2D::Create(filename);
 					}
 				}
 				ImGui::SameLine();
@@ -557,9 +544,9 @@ public:
 					}
 					if (ImGui::IsItemClicked())
 					{
-						std::string filename = Zenith::Application::Get().OpenFile("");
+						std::string filename = Application::Get().OpenFile("");
 						if (filename != "")
-							m_RoughnessInput.TextureMap = (Zenith::Texture2D::Create(filename));
+							m_RoughnessInput.TextureMap = Texture2D::Create(filename);
 					}
 				}
 				ImGui::SameLine();
@@ -573,7 +560,7 @@ public:
 
 		if (ImGui::TreeNode("Shaders"))
 		{
-			auto& shaders = Zenith::Shader::s_AllShaders;
+			auto& shaders = Shader::s_AllShaders;
 			for (auto& shader : shaders)
 			{
 				if (ImGui::TreeNode(shader->GetName().c_str()))
@@ -587,6 +574,7 @@ public:
 			ImGui::TreePop();
 		}
 
+
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -594,10 +582,10 @@ public:
 
 		auto viewportOffset = ImGui::GetCursorPos(); // includes tab bar
 		auto viewportSize = ImGui::GetContentRegionAvail();
-		Zenith::SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		m_ActiveScene->GetCamera().SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 		m_ActiveScene->GetCamera().SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
-		ImGui::Image((ImTextureID)(uintptr_t)(Zenith::SceneRenderer::GetFinalColorBufferRendererID()), viewportSize, { 0, 1 }, { 1, 0 });
+		ImGui::Image((ImTextureID)(uintptr_t)SceneRenderer::GetFinalColorBufferRendererID(), viewportSize, { 0, 1 }, { 1, 0 });
 
 		static int counter = 0;
 		auto windowSize = ImGui::GetWindowSize();
@@ -618,8 +606,9 @@ public:
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, rw, rh);
-			bool snap = Zenith::Input::IsKeyPressed(ZN_KEY_LEFT_CONTROL);
-			ImGuizmo::Manipulate(glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix()* m_MeshEntity->Transform()),
+
+			bool snap = Input::IsKeyPressed(ZN_KEY_LEFT_CONTROL);
+			ImGuizmo::Manipulate(glm::value_ptr(m_ActiveScene->GetCamera().GetViewMatrix() * m_MeshEntity->Transform()),
 				glm::value_ptr(m_ActiveScene->GetCamera().GetProjectionMatrix()),
 				(ImGuizmo::OPERATION)m_GizmoType,
 				ImGuizmo::LOCAL,
@@ -642,6 +631,7 @@ public:
 				if (ImGui::MenuItem("Flag: NoSplit", "", (opt_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 opt_flags ^= ImGuiDockNodeFlags_NoSplit;
 				if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (opt_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  opt_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
 				if (ImGui::MenuItem("Flag: NoResize", "", (opt_flags & ImGuiDockNodeFlags_NoResize) != 0))                opt_flags ^= ImGuiDockNodeFlags_NoResize;
+				//if (ImGui::MenuItem("Flag: PassthruDockspace", "", (opt_flags & ImGuiDockNodeFlags_PassthruDockspace) != 0))       opt_flags ^= ImGuiDockNodeFlags_PassthruDockspace;
 				if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (opt_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          opt_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
 				ImGui::Separator();
 				if (ImGui::MenuItem("Close DockSpace", NULL, false, p_open != NULL))
@@ -661,22 +651,20 @@ public:
 
 		m_SceneHierarchyPanel->OnImGuiRender();
 
-		// static bool o = true;
-		// ImGui::ShowDemoWindow(&o);
 		ImGui::End();
 	}
 
-	virtual void OnEvent(Zenith::Event& e) override
+	void EditorLayer::OnEvent(Event& e)
 	{
 		if (m_AllowViewportCameraEvents)
 			m_Scene->GetCamera().OnEvent(e);
 
-		Zenith::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<Zenith::KeyPressedEvent>(ZN_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
-		dispatcher.Dispatch<Zenith::MouseButtonPressedEvent>(ZN_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(ZN_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(ZN_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
 	}
 
-	bool OnKeyPressedEvent(Zenith::KeyPressedEvent& e)
+	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
 	{
 		switch (e.GetKeyCode())
 		{
@@ -695,7 +683,7 @@ public:
 		case ZN_KEY_G:
 			// Toggle grid
 			if (Zenith::Input::IsKeyPressed(ZN_KEY_LEFT_CONTROL))
-				Zenith::SceneRenderer::GetOptions().ShowGrid = !Zenith::SceneRenderer::GetOptions().ShowGrid;
+				SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
 			break;
 		case ZN_KEY_B:
 			// Toggle bounding boxes 
@@ -709,10 +697,10 @@ public:
 		return false;
 	}
 
-	bool OnMouseButtonPressed(Zenith::MouseButtonPressedEvent& e)
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		auto [mx, my] = Zenith::Input::GetMousePosition();
-		if (e.GetMouseButton() == ZN_MOUSE_BUTTON_LEFT && !Zenith::Input::IsKeyPressed(ZN_KEY_LEFT_ALT) && !ImGuizmo::IsOver())
+		auto [mx, my] = Input::GetMousePosition();
+		if (e.GetMouseButton() == ZN_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(ZN_KEY_LEFT_ALT) && !ImGuizmo::IsOver())
 		{
 			auto [mouseX, mouseY] = GetMouseViewportSpace();
 			if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)
@@ -726,7 +714,7 @@ public:
 				for (uint32_t i = 0; i < submeshes.size(); i++)
 				{
 					auto& submesh = submeshes[i];
-					Zenith::Ray ray = {
+					Ray ray = {
 						glm::inverse(m_MeshEntity->GetTransform() * submesh.Transform) * glm::vec4(origin, 1.0f),
 						glm::inverse(glm::mat3(m_MeshEntity->GetTransform()) * glm::mat3(submesh.Transform)) * direction
 					};
@@ -760,7 +748,7 @@ public:
 		return false;
 	}
 
-	std::pair<float, float> GetMouseViewportSpace()
+	std::pair<float, float> EditorLayer::GetMouseViewportSpace()
 	{
 		auto [mx, my] = ImGui::GetMousePos(); // Input::GetMousePosition();
 		mx -= m_ViewportBounds[0].x;
@@ -771,7 +759,7 @@ public:
 		return { (mx / viewportWidth) * 2.0f - 1.0f, ((my / viewportHeight) * 2.0f - 1.0f) * -1.0f };
 	}
 
-	std::pair<glm::vec3, glm::vec3> CastRay(float mx, float my)
+	std::pair<glm::vec3, glm::vec3> EditorLayer::CastRay(float mx, float my)
 	{
 		glm::vec4 mouseClipPos = { mx, my, -1.0f, 1.0f };
 
@@ -784,105 +772,5 @@ public:
 
 		return { rayPos, rayDir };
 	}
-private:
-	Zenith::Scope<Zenith::SceneHierarchyPanel> m_SceneHierarchyPanel;
 
-	Zenith::Ref<Zenith::Scene> m_Scene;
-	Zenith::Ref<Zenith::Scene> m_SphereScene;
-	Zenith::Ref<Zenith::Scene> m_ActiveScene;
-
-	Zenith::Entity* m_MeshEntity = nullptr;
-
-	Zenith::Ref<Zenith::Shader> m_BrushShader;
-	Zenith::Ref<Zenith::Mesh> m_PlaneMesh;
-	Zenith::Ref<Zenith::Material> m_SphereBaseMaterial;
-
-	Zenith::Ref<Zenith::Material> m_MeshMaterial;
-	std::vector<Zenith::Ref<Zenith::MaterialInstance>> m_MetalSphereMaterialInstances;
-	std::vector<Zenith::Ref<Zenith::MaterialInstance>> m_DielectricSphereMaterialInstances;
-
-	float m_GridScale = 16.025f, m_GridSize = 0.025f;
-	float m_MeshScale = 1.0f;
-
-	struct AlbedoInput
-	{
-		glm::vec3 Color = { 0.972f, 0.96f, 0.915f }; // Silver, from https://docs.unrealengine.com/en-us/Engine/Rendering/Materials/PhysicallyBased
-		Zenith::Ref<Zenith::Texture2D> TextureMap;
-		bool SRGB = true;
-		bool UseTexture = false;
-	};
-	AlbedoInput m_AlbedoInput;
-
-	struct NormalInput
-	{
-		Zenith::Ref<Zenith::Texture2D> TextureMap;
-		bool UseTexture = false;
-	};
-	NormalInput m_NormalInput;
-
-	struct MetalnessInput
-	{
-		float Value = 1.0f;
-		Zenith::Ref<Zenith::Texture2D> TextureMap;
-		bool UseTexture = false;
-	};
-	MetalnessInput m_MetalnessInput;
-
-	struct RoughnessInput
-	{
-		float Value = 0.3f;
-		Zenith::Ref<Zenith::Texture2D> TextureMap;
-		bool UseTexture = false;
-	};
-	RoughnessInput m_RoughnessInput;
-
-	// PBR params
-	bool m_RadiancePrefilter = false;
-
-	float m_EnvMapRotation = 0.0f;
-
-	enum class SceneType : uint32_t
-	{
-		Spheres = 0, Model = 1
-	};
-	SceneType m_SceneType;
-
-	// Editor resources
-	Zenith::Ref<Zenith::Texture2D> m_CheckerboardTex;
-
-	glm::vec2 m_ViewportBounds[2];
-	int m_GizmoType = -1; // -1 = no gizmo
-	float m_SnapValue = 0.5f;
-	bool m_AllowViewportCameraEvents = false;
-	bool m_DrawOnTopBoundingBoxes = false;
-
-	bool m_UIShowBoundingBoxes = false;
-	bool m_UIShowBoundingBoxesOnTop = false;
-
-	struct SelectedSubmesh
-	{
-		Zenith::Submesh* Mesh;
-		float Distance;
-	};
-	std::vector<SelectedSubmesh> m_SelectedSubmeshes;
-	glm::mat4* m_CurrentlySelectedTransform = nullptr;
-};
-
-class Sandbox : public Zenith::Application
-{
-public:
-	Sandbox()
-	{
-		ZN_TRACE("Hello!");
-	}
-
-	virtual void OnInit() override
-	{
-		PushLayer(new EditorLayer());
-	}
-};
-
-Zenith::Application* Zenith::CreateApplication(int arc, char** argv)
-{
-	return new Sandbox();
 }
