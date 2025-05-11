@@ -59,7 +59,6 @@ namespace Zenith {
 		glfwMaximizeWindow(m_Window);
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		SetVSync(true);
 		RegisterGLFWCallbacks();
 
 		int width, height;

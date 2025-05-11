@@ -54,6 +54,7 @@ include "Zenith/vendor/GLFW"
 include "Zenith/vendor/imgui"
 include "Zenith/vendor/Glad"
 include "Zenith/vendor/tracy"
+include "Zenith/vendor/JoltPhysics/JoltPhysicsPremake.lua"
 group ""
 
 group "Core"

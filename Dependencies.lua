@@ -27,6 +27,19 @@ Dependencies = {
 	GLM = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/glm",
 	},
+	EnTT = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/entt/include",
+	},
+	FastNoise = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/FastNoise",
+	},
+	JoltPhysics = {
+		LibName = "JoltPhysics",
+		IncludeDir = "%{wks.location}/Zenith/vendor/JoltPhysics/JoltPhysics",
+	},
+	YAML_CPP = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/yaml-cpp/include",
+	},
 	Tracy = {
 		LibName = "Tracy",
 		IncludeDir = "%{wks.location}/Zenith/vendor/tracy/tracy/public",
@@ -34,14 +47,14 @@ Dependencies = {
 	STB = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/stb/include",
 	},
+	BackwardCPP = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/backward-cpp"
+	},
 	WS2 = {
 		Windows = { LibName = "ws2_32", },
 	},
 	Dbghelp = {
 		Windows = { LibName = "	Dbghelp" },
-	},
-	BackwardCPP = {
-		IncludeDir = "%{wks.location}/Zenith/vendor/backward-cpp"
 	},
 }
 

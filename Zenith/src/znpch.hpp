@@ -61,3 +61,10 @@
 #include <Zenith/Core/Assert.hpp>
 #include <Zenith/Core/Events/Event.hpp>
 #include <Zenith/Core/Log.hpp>
+
+// Jolt (Safety because this file has to be included before all other Jolt headers, at all times)
+#ifdef ZN_DEBUG
+
+#define JPH_ENABLE_ASSERTS
+#endif
+#include <Jolt/Jolt.h>

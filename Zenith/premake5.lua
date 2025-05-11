@@ -11,7 +11,13 @@ project "Zenith"
 		"src/**.h",
 		"src/**.c",
 		"src/**.hpp",
-		"src/**.cpp"
+		"src/**.cpp",
+
+		"vendor/FastNoise/**.cpp",
+
+		"vendor/yaml-cpp/src/**.cpp",
+		"vendor/yaml-cpp/src/**.h",
+		"vendor/yaml-cpp/include/**.h",
 	}
 
 	includedirs { "src/", "vendor/" }
@@ -20,13 +26,16 @@ project "Zenith"
 
 	defines { "GLM_FORCE_DEPTH_ZERO_TO_ONE" }
 
+	filter "files:vendor/FastNoise/**.cpp or files:vendor/yaml-cpp/src/**.cpp"
+		flags { "NoPCH" }
+
 	filter "system:windows"
 		systemversion "latest"
 		defines { "ZN_PLATFORM_WINDOWS" }
 		links { "opengl32.lib" }
 
 	filter "system:linux"
-		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID" }
+		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID", "BACKWARD_HAS_DW", "BACKWARD_HAS_LIBUNWIND" }
 		links { "dw", "dl", "unwind", "pthread" }
 
 	filter "configurations:Debug or configurations:Debug-AS"
@@ -42,6 +51,13 @@ project "Zenith"
 		vectorextensions "AVX2"
 		isaextensions { "BMI", "POPCNT", "LZCNT", "F16C" }
 		defines { "ZN_RELEASE", "NDEBUG", }
+
+	filter { "configurations:Debug or configurations:Debug-AS or configurations:Release" }
+		defines {
+			"JPH_DEBUG_RENDERER",
+			"JPH_FLOATING_POINT_EXCEPTIONS_ENABLED",
+			"JPH_EXTERNAL_PROFILE"
+		}
 
 	filter "configurations:Dist"
 		optimize "On"

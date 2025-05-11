@@ -40,7 +40,7 @@ project "Zenith-Editor"
 		}
 
 	filter "system:linux"
-		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID" }
+		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID", "BACKWARD_HAS_DW", "BACKWARD_HAS_LIBUNWIND" }
 		links { "dw", "dl", "unwind", "pthread" }
 
 		result, err = os.outputof("pkg-config --libs gtk+-3.0")
@@ -63,6 +63,13 @@ project "Zenith-Editor"
 		defines { "ZN_RELEASE", }
 
 		ProcessDependencies("Release")
+
+	filter "configurations:Debug or configurations:Debug-AS or configurations:Release"
+		defines {
+			"JPH_DEBUG_RENDERER",
+			"JPH_FLOATING_POINT_EXCEPTIONS_ENABLED",
+			"JPH_EXTERNAL_PROFILE"
+		}
 
 	filter "configurations:Dist"
 		flags { "ExcludeFromBuild" }
