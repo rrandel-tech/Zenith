@@ -208,4 +208,26 @@ namespace Zenith {
 		return (float)glfwGetTime();
 	}
 
+	const char* Application::GetConfigurationName()
+	{
+#if defined(ZN_DEBUG)
+		return "Debug";
+#elif defined(ZN_RELEASE)
+		return "Release";
+#elif defined(ZN_DIST)
+		return "Dist";
+#else
+#error Undefined configuration?
+#endif
+	}
+
+	const char* Application::GetPlatformName()
+	{
+#if defined(ZN_PLATFORM_WINDOWS)
+		return "Windows x64";
+#else
+#error Undefined platform?
+#endif
+	}
+
 }

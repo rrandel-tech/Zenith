@@ -186,7 +186,7 @@ namespace Zenith {
 			out << YAML::BeginMap; // TransformComponent
 
 			auto& transform = entity.GetComponent<TransformComponent>().Transform;
-			auto[pos, rot, scale] = GetTransformDecomposition(transform);
+			auto [pos, rot, scale] = GetTransformDecomposition(transform);
 			out << YAML::Key << "Position" << YAML::Value << pos;
 			out << YAML::Key << "Rotation" << YAML::Value << rot;
 			out << YAML::Key << "Scale" << YAML::Value << scale;
@@ -261,7 +261,7 @@ namespace Zenith {
 			out << YAML::Key << "CameraComponent";
 			out << YAML::BeginMap; // CameraComponent
 
-			auto cameraComponent = entity.GetComponent<CameraComponent>();
+			auto& cameraComponent = entity.GetComponent<CameraComponent>();
 			out << YAML::Key << "Camera" << YAML::Value << "some camera data...";
 			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
 
@@ -273,13 +273,49 @@ namespace Zenith {
 			out << YAML::Key << "SpriteRendererComponent";
 			out << YAML::BeginMap; // SpriteRendererComponent
 
-			auto spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
+			auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
 			out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
 			if (spriteRendererComponent.Texture)
 				out << YAML::Key << "TextureAssetPath" << YAML::Value << "path/to/asset";
 			out << YAML::Key << "TilingFactor" << YAML::Value << spriteRendererComponent.TilingFactor;
 
 			out << YAML::EndMap; // SpriteRendererComponent
+		}
+
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			out << YAML::Key << "RigidBody2DComponent";
+			out << YAML::BeginMap; // RigidBody2DComponent
+
+			auto& rigidbody2DComponent = entity.GetComponent<RigidBody2DComponent>();
+			out << YAML::Key << "BodyType" << YAML::Value << (int)rigidbody2DComponent.BodyType;
+			out << YAML::Key << "Mass" << YAML::Value << rigidbody2DComponent.Mass;
+
+			out << YAML::EndMap; // RigidBody2DComponent
+		}
+
+		if (entity.HasComponent<BoxCollider2DComponent>())
+		{
+			out << YAML::Key << "BoxCollider2DComponent";
+			out << YAML::BeginMap; // BoxCollider2DComponent
+
+			auto& boxCollider2DComponent = entity.GetComponent<BoxCollider2DComponent>();
+			out << YAML::Key << "Offset" << YAML::Value << boxCollider2DComponent.Offset;
+			out << YAML::Key << "Size" << YAML::Value << boxCollider2DComponent.Size;
+
+			out << YAML::EndMap; // BoxCollider2DComponent
+		}
+
+		if (entity.HasComponent<CircleCollider2DComponent>())
+		{
+			out << YAML::Key << "CircleCollider2DComponent";
+			out << YAML::BeginMap; // CircleCollider2DComponent
+
+			auto& circleCollider2DComponent = entity.GetComponent<CircleCollider2DComponent>();
+			out << YAML::Key << "Offset" << YAML::Value << circleCollider2DComponent.Offset;
+			out << YAML::Key << "Radius" << YAML::Value << circleCollider2DComponent.Radius;
+
+			out << YAML::EndMap; // CircleCollider2DComponent
 		}
 
 		out << YAML::EndMap; // Entity
@@ -311,14 +347,14 @@ namespace Zenith {
 		out << YAML::Key << "Entities";
 		out << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
-		{
-			Entity entity = { entityID, m_Scene.Raw() };
-			if (!entity || !entity.HasComponent<IDComponent>())
-				return;
+			{
+				Entity entity = { entityID, m_Scene.Raw() };
+				if (!entity || !entity.HasComponent<IDComponent>())
+					return;
 
-			SerializeEntity(out, entity);
+				SerializeEntity(out, entity);
 
-		});
+			});
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
@@ -423,41 +459,41 @@ namespace Zenith {
 								auto dataNode = field["Data"];
 								switch (type)
 								{
-									case FieldType::Float:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<float>());
-										break;
-									}
-									case FieldType::Int:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<int32_t>());
-										break;
-									}
-									case FieldType::UnsignedInt:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<uint32_t>());
-										break;
-									}
-									case FieldType::String:
-									{
-										ZN_CORE_ASSERT(false, "Unimplemented");
-										break;
-									}
-									case FieldType::Vec2:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec2>());
-										break;
-									}
-									case FieldType::Vec3:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec3>());
-										break;
-									}
-									case FieldType::Vec4:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec4>());
-										break;
-									}
+								case FieldType::Float:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<float>());
+									break;
+								}
+								case FieldType::Int:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<int32_t>());
+									break;
+								}
+								case FieldType::UnsignedInt:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<uint32_t>());
+									break;
+								}
+								case FieldType::String:
+								{
+									ZN_CORE_ASSERT(false, "Unimplemented");
+									break;
+								}
+								case FieldType::Vec2:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec2>());
+									break;
+								}
+								case FieldType::Vec3:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec3>());
+									break;
+								}
+								case FieldType::Vec4:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec4>());
+									break;
+								}
 								}
 							}
 						}
@@ -491,9 +527,32 @@ namespace Zenith {
 					auto& component = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					component.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 					component.TilingFactor = spriteRendererComponent["TilingFactor"].as<float>();
-
-					ZN_CORE_INFO("  SpriteRendererComponent present.");
 				}
+
+				auto rigidBody2DComponent = entity["RigidBody2DComponent"];
+				if (rigidBody2DComponent)
+				{
+					auto& component = deserializedEntity.AddComponent<RigidBody2DComponent>();
+					component.BodyType = (RigidBody2DComponent::Type)rigidBody2DComponent["BodyType"].as<int>();
+					component.Mass = rigidBody2DComponent["Mass"].as<float>();
+				}
+
+				auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
+				if (boxCollider2DComponent)
+				{
+					auto& component = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+					component.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+					component.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+				}
+
+				auto circleCollider2DComponent = entity["CircleCollider2DComponent"];
+				if (circleCollider2DComponent)
+				{
+					auto& component = deserializedEntity.AddComponent<CircleCollider2DComponent>();
+					component.Offset = circleCollider2DComponent["Offset"].as<glm::vec2>();
+					component.Radius = circleCollider2DComponent["Radius"].as<float>();
+				}
+
 			}
 		}
 		return true;

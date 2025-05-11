@@ -44,6 +44,9 @@ namespace Zenith {
 		[[nodiscard]] bool IsVSync() const { return m_Data.VSync; }
 		[[nodiscard]] void* GetNativeWindow() const { return m_Window; }
 
+		std::string& GetTitle() const;
+		void SetTitle(const std::string& title);
+
 		void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled);
 

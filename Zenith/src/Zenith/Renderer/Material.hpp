@@ -84,7 +84,7 @@ namespace Zenith {
 	{
 		friend class Material;
 	public:
-		MaterialInstance(const Ref<Material>& material);
+		MaterialInstance(const Ref<Material>& material, const std::string& name = "");
 		virtual ~MaterialInstance();
 
 		template <typename T>
@@ -128,7 +128,9 @@ namespace Zenith {
 		bool GetFlag(MaterialFlag flag) const { return (uint32_t)flag & m_Material->m_MaterialFlags; }
 		void SetFlag(MaterialFlag flag, bool value = true);
 
-		Ref<Shader >GetShader() { return m_Material->m_Shader; }
+		Ref<Shader >GetShader() const { return m_Material->m_Shader; }
+
+		const std::string& GetName() const { return m_Name; }
 	public:
 		static Ref<MaterialInstance> Create(const Ref<Material>& material);
 	private:
@@ -138,6 +140,7 @@ namespace Zenith {
 		void OnMaterialValueUpdated(ShaderUniformDeclaration* decl);
 	private:
 		Ref<Material> m_Material;
+		std::string m_Name;
 
 		Buffer m_VSUniformStorageBuffer;
 		Buffer m_PSUniformStorageBuffer;

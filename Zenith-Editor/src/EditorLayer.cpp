@@ -4,6 +4,13 @@
 #include "Zenith/Renderer/Renderer2D.hpp"
 #include "Zenith/Script/ScriptEngine.hpp"
 
+#include <filesystem>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Zenith {
 
 	static void ImGuiShowHelpMarker(const char* desc)
@@ -17,6 +24,16 @@ namespace Zenith {
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
+	}
+
+	static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
+	{
+		glm::vec3 scale, translation, skew;
+		glm::vec4 perspective;
+		glm::quat orientation;
+		glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
+		return { translation, orientation, scale };
 	}
 
 	EditorLayer::EditorLayer()
@@ -82,6 +99,7 @@ namespace Zenith {
 		m_PlayButtonTex = Texture2D::Create("Resources/Editor/PlayButton.png");
 
 		m_EditorScene = Ref<Scene>::Create();
+		UpdateWindowTitle("Untitled Scene");
 		ScriptEngine::SetSceneContext(m_EditorScene);
 		m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>(m_EditorScene);
 		m_SceneHierarchyPanel->SetSelectionChangedCallback(std::bind(&EditorLayer::SelectEntity, this, std::placeholders::_1));
@@ -99,6 +117,9 @@ namespace Zenith {
 		m_SelectionContext.clear();
 
 		m_SceneState = SceneState::Play;
+
+		if (m_ReloadScriptOnPlay)
+			ScriptEngine::ReloadAssembly("Resources/Scripts/ExampleApp.dll");
 
 		m_RuntimeScene = Ref<Scene>::Create();
 		m_EditorScene->CopyTo(m_RuntimeScene);
@@ -120,13 +141,19 @@ namespace Zenith {
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 	}
 
+	void EditorLayer::UpdateWindowTitle(const std::string& sceneName)
+	{
+		std::string title = sceneName + " - Zenith-Editor - " + Application::GetPlatformName() + " (" + Application::GetConfigurationName() + ")";
+		Application::Get().GetWindow().SetTitle(title);
+	}
+
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		switch (m_SceneState)
 		{
 		case SceneState::Edit:
 		{
-			if (m_ViewportPanelFocused)
+			// if (m_ViewportPanelFocused)
 				m_EditorCamera.OnUpdate(ts);
 
 			m_EditorScene->OnRenderEditor(ts, m_EditorCamera);
@@ -156,6 +183,26 @@ namespace Zenith {
 					Renderer::EndRenderPass();
 				}
 			}
+
+			if (m_SelectionContext.size())
+			{
+				auto& selection = m_SelectionContext[0];
+
+				if (selection.Entity.HasComponent<BoxCollider2DComponent>())
+				{
+					const auto& size = selection.Entity.GetComponent<BoxCollider2DComponent>().Size;
+					auto [translation, rotationQuat, scale] = GetTransformDecomposition(selection.Entity.GetComponent<TransformComponent>().Transform);
+					glm::vec3 rotation = glm::eulerAngles(rotationQuat);
+
+					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+					auto viewProj = m_EditorCamera.GetViewProjection();
+					Renderer2D::BeginScene(viewProj, false);
+					Renderer2D::DrawRotatedQuad({ translation.x, translation.y }, size * 2.0f, glm::degrees(rotation.z), { 1.0f, 0.0f, 1.0f, 1.0f });
+					Renderer2D::EndScene();
+					Renderer::EndRenderPass();
+				}
+			}
+
 			break;
 		}
 		case SceneState::Play:
@@ -193,77 +240,99 @@ namespace Zenith {
 		return result;
 	}
 
-	void EditorLayer::Property(const std::string& name, float& value, float min, float max, EditorLayer::PropertyFlag flags)
+	bool EditorLayer::Property(const std::string& name, float& value, float min, float max, PropertyFlag flags)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
 		ImGui::PushItemWidth(-1);
 
 		std::string id = "##" + name;
-		ImGui::SliderFloat(id.c_str(), &value, min, max);
-
-		ImGui::PopItemWidth();
-		ImGui::NextColumn();
-	}
-
-	void EditorLayer::Property(const std::string& name, glm::vec2& value, EditorLayer::PropertyFlag flags)
-	{
-		Property(name, value, -1.0f, 1.0f, flags);
-	}
-
-	void EditorLayer::Property(const std::string& name, glm::vec2& value, float min, float max, EditorLayer::PropertyFlag flags)
-	{
-		ImGui::Text(name.c_str());
-		ImGui::NextColumn();
-		ImGui::PushItemWidth(-1);
-
-		std::string id = "##" + name;
-		ImGui::SliderFloat2(id.c_str(), glm::value_ptr(value), min, max);
-
-		ImGui::PopItemWidth();
-		ImGui::NextColumn();
-	}
-
-	void EditorLayer::Property(const std::string& name, glm::vec3& value, EditorLayer::PropertyFlag flags)
-	{
-		Property(name, value, -1.0f, 1.0f, flags);
-	}
-
-	void EditorLayer::Property(const std::string& name, glm::vec3& value, float min, float max, EditorLayer::PropertyFlag flags)
-	{
-		ImGui::Text(name.c_str());
-		ImGui::NextColumn();
-		ImGui::PushItemWidth(-1);
-
-		std::string id = "##" + name;
-		if ((int)flags & (int)PropertyFlag::ColorProperty)
-			ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+		bool changed = false;
+		if (flags == PropertyFlag::SliderProperty)
+			changed = ImGui::SliderFloat(id.c_str(), &value, min, max);
 		else
-			ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
+			changed = ImGui::DragFloat(id.c_str(), &value, 1.0f, min, max);
 
 		ImGui::PopItemWidth();
 		ImGui::NextColumn();
+
+		return changed;
 	}
 
-	void EditorLayer::Property(const std::string& name, glm::vec4& value, EditorLayer::PropertyFlag flags)
+	bool EditorLayer::Property(const std::string& name, glm::vec2& value, EditorLayer::PropertyFlag flags)
 	{
-		Property(name, value, -1.0f, 1.0f, flags);
+		return Property(name, value, -1.0f, 1.0f, flags);
 	}
 
-	void EditorLayer::Property(const std::string& name, glm::vec4& value, float min, float max, EditorLayer::PropertyFlag flags)
+	bool EditorLayer::Property(const std::string& name, glm::vec2& value, float min, float max, PropertyFlag flags)
 	{
 		ImGui::Text(name.c_str());
 		ImGui::NextColumn();
 		ImGui::PushItemWidth(-1);
 
 		std::string id = "##" + name;
-		if ((int)flags & (int)PropertyFlag::ColorProperty)
-			ImGui::ColorEdit4(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+		bool changed = false;
+		if (flags == PropertyFlag::SliderProperty)
+			changed = ImGui::SliderFloat2(id.c_str(), glm::value_ptr(value), min, max);
 		else
-			ImGui::SliderFloat4(id.c_str(), glm::value_ptr(value), min, max);
+			changed = ImGui::DragFloat2(id.c_str(), glm::value_ptr(value), 1.0f, min, max);
 
 		ImGui::PopItemWidth();
 		ImGui::NextColumn();
+
+		return changed;
+	}
+
+	bool EditorLayer::Property(const std::string& name, glm::vec3& value, EditorLayer::PropertyFlag flags)
+	{
+		return Property(name, value, -1.0f, 1.0f, flags);
+	}
+
+	bool EditorLayer::Property(const std::string& name, glm::vec3& value, float min, float max, EditorLayer::PropertyFlag flags)
+	{
+		ImGui::Text(name.c_str());
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		std::string id = "##" + name;
+		bool changed = false;
+		if ((int)flags & (int)PropertyFlag::ColorProperty)
+			changed = ImGui::ColorEdit3(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+		else if (flags == PropertyFlag::SliderProperty)
+			changed = ImGui::SliderFloat3(id.c_str(), glm::value_ptr(value), min, max);
+		else
+			changed = ImGui::DragFloat3(id.c_str(), glm::value_ptr(value), 1.0f, min, max);
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+
+		return changed;
+	}
+
+	bool EditorLayer::Property(const std::string& name, glm::vec4& value, EditorLayer::PropertyFlag flags)
+	{
+		return Property(name, value, -1.0f, 1.0f, flags);
+	}
+
+	bool EditorLayer::Property(const std::string& name, glm::vec4& value, float min, float max, EditorLayer::PropertyFlag flags)
+	{
+		ImGui::Text(name.c_str());
+		ImGui::NextColumn();
+		ImGui::PushItemWidth(-1);
+
+		std::string id = "##" + name;
+		bool changed = false;
+		if ((int)flags & (int)PropertyFlag::ColorProperty)
+			changed = ImGui::ColorEdit4(id.c_str(), glm::value_ptr(value), ImGuiColorEditFlags_NoInputs);
+		else if (flags == PropertyFlag::SliderProperty)
+			changed = ImGui::SliderFloat4(id.c_str(), glm::value_ptr(value), min, max);
+		else
+			changed = ImGui::DragFloat4(id.c_str(), glm::value_ptr(value), 1.0f, min, max);
+
+		ImGui::PopItemWidth();
+		ImGui::NextColumn();
+
+		return changed;
 	}
 
 	void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
@@ -345,14 +414,31 @@ namespace Zenith {
 		ImGui::AlignTextToFramePadding();
 
 		auto& light = m_EditorScene->GetLight();
-		Property("Light Direction", light.Direction);
+		Property("Light Direction", light.Direction, PropertyFlag::SliderProperty);
 		Property("Light Radiance", light.Radiance, PropertyFlag::ColorProperty);
-		Property("Light Multiplier", light.Multiplier, 0.0f, 5.0f);
+		Property("Light Multiplier", light.Multiplier, 0.0f, 5.0f, PropertyFlag::SliderProperty);
 
-		Property("Exposure", m_EditorCamera.GetExposure(), 0.0f, 5.0f);
+		Property("Exposure", m_EditorCamera.GetExposure(), 0.0f, 5.0f, PropertyFlag::SliderProperty);
 
 		Property("Radiance Prefiltering", m_RadiancePrefilter);
-		Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f);
+		Property("Env Map Rotation", m_EnvMapRotation, -360.0f, 360.0f, PropertyFlag::SliderProperty);
+
+		if (m_SceneState == SceneState::Edit)
+		{
+			float physics2DGravity = m_EditorScene->GetPhysics2DGravity();
+			if (Property("Gravity", physics2DGravity, -10000.0f, 10000.0f, PropertyFlag::DragProperty))
+			{
+				m_EditorScene->SetPhysics2DGravity(physics2DGravity);
+			}
+		}
+		else if (m_SceneState == SceneState::Play)
+		{
+			float physics2DGravity = m_RuntimeScene->GetPhysics2DGravity();
+			if (Property("Gravity", physics2DGravity, -10000.0f, 10000.0f, PropertyFlag::DragProperty))
+			{
+				m_RuntimeScene->SetPhysics2DGravity(physics2DGravity);
+			}
+		}
 
 		if (Property("Show Bounding Boxes", m_UIShowBoundingBoxes))
 			ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
@@ -550,7 +636,7 @@ namespace Zenith {
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.8f, 0.8f, 0.0f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-		/*ImGui::Begin("Toolbar");
+		ImGui::Begin("Toolbar");
 		if (m_SceneState == SceneState::Edit)
 		{
 			ImGui::ImageButton("##PLAYBUTTON", (ImTextureID)(m_PlayButtonTex->GetRendererID()), ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 0), ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
@@ -570,7 +656,7 @@ namespace Zenith {
 		{
 			ZN_CORE_INFO("PLAY!");
 		}
-		ImGui::End();*/
+		ImGui::End();
 		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
@@ -666,6 +752,8 @@ namespace Zenith {
 						SceneSerializer serializer(newScene);
 						serializer.Deserialize(filepath);
 						m_EditorScene = newScene;
+						std::filesystem::path path = filepath;
+						UpdateWindowTitle(path.filename().string());
 						m_SceneHierarchyPanel->SetContext(m_EditorScene);
 						ScriptEngine::SetSceneContext(m_EditorScene);
 
@@ -679,19 +767,70 @@ namespace Zenith {
 					std::string filepath = app.SaveFile("Zenith Scene (*.zscene)\0*.zscene\0");
 					SceneSerializer serializer(m_EditorScene);
 					serializer.Serialize(filepath);
+
+					std::filesystem::path path = filepath;
+					UpdateWindowTitle(path.filename().string());
 				}
 				ImGui::Separator();
-				if (ImGui::MenuItem("Reload C# Assembly"))
-					ScriptEngine::ReloadAssembly("assets/scripts/ExampleApp.dll");
+
 				ImGui::Separator();
 				if (ImGui::MenuItem("Exit"))
 					p_open = false;
 				ImGui::EndMenu();
 			}
+
+			if (ImGui::BeginMenu("Script"))
+			{
+				if (ImGui::MenuItem("Reload C# Assembly"))
+					ScriptEngine::ReloadAssembly("assets/scripts/ExampleApp.dll");
+
+				ImGui::MenuItem("Reload assembly on play", nullptr, &m_ReloadScriptOnPlay);
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
 
 		m_SceneHierarchyPanel->OnImGuiRender();
+
+		ImGui::Begin("Materials");
+
+		if (m_SelectionContext.size())
+		{
+			Entity selectedEntity = m_SelectionContext.front().Entity;
+			if (selectedEntity.HasComponent<MeshComponent>())
+			{
+				Ref<Mesh> mesh = selectedEntity.GetComponent<MeshComponent>().Mesh;
+				if (mesh)
+				{
+					const auto& materials = mesh->GetMaterials();
+					static uint32_t selectedMaterialIndex = 0;
+					for (uint32_t i = 0; i < materials.size(); i++)
+					{
+						auto& materialInstance = materials[i];
+
+						ImGuiTreeNodeFlags node_flags = (selectedMaterialIndex == i ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Leaf;
+						bool opened = ImGui::TreeNodeEx((void*)(&materialInstance), node_flags, materialInstance->GetName().c_str());
+						if (ImGui::IsItemClicked())
+						{
+							selectedMaterialIndex = i;
+						}
+						if (opened)
+							ImGui::TreePop();
+
+					}
+
+					ImGui::Separator();
+
+					if (selectedMaterialIndex < materials.size())
+					{
+						ImGui::Text("Shader: %s", materials[selectedMaterialIndex]->GetShader()->GetName().c_str());
+					}
+				}
+			}
+		}
+
+		ImGui::End();
 
 		ScriptEngine::OnImGuiRender();
 
@@ -777,7 +916,7 @@ namespace Zenith {
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		auto [mx, my] = Input::GetMousePosition();
-		if (e.GetMouseButton() == ZN_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver())
+		if (e.GetMouseButton() == ZN_MOUSE_BUTTON_LEFT && !Input::IsKeyPressed(KeyCode::LeftAlt) && !ImGuizmo::IsOver() && m_SceneState != SceneState::Play)
 		{
 			auto [mouseX, mouseY] = GetMouseViewportSpace();
 			if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)

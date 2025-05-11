@@ -83,6 +83,12 @@
     <Compile Include="..\src\Noise.cs">
       <Link>src\Noise.cs</Link>
     </Compile>
+    <Compile Include="..\src\PlayerCube.cs">
+      <Link>src\PlayerCube.cs</Link>
+    </Compile>
+    <Compile Include="..\src\RandomColor.cs">
+      <Link>src\RandomColor.cs</Link>
+    </Compile>
     <Compile Include="..\src\Script.cs">
       <Link>src\Script.cs</Link>
     </Compile>

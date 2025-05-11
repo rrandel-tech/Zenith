@@ -193,6 +193,12 @@ namespace Zenith {
 		m_Data.VSync = enabled;
 	}
 
+	void Window::SetTitle(const std::string& title)
+	{
+		m_Data.Title = title;
+		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
+	}
+
 	void Window::Shutdown()
 	{
 		if (m_Window)

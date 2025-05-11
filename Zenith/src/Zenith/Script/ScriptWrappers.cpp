@@ -12,6 +12,8 @@
 #include "Zenith/Core/Input.hpp"
 #include <mono/jit/jit.h>
 
+#include <box2d/box2d.h>
+
 namespace Zenith {
 	extern std::unordered_map<MonoType*, std::function<bool(Entity&)>> s_HasComponentFuncs;
 	extern std::unordered_map<MonoType*, std::function<void(Entity&)>> s_CreateComponentFuncs;
@@ -162,6 +164,20 @@ namespace Zenith { namespace Script {
 		return materials.size();
 	}
 
+	void Zenith_RigidBody2DComponent_ApplyLinearImpulse(uint64_t entityID, glm::vec2* impulse, glm::vec2* offset, bool wake)
+	{
+		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+		ZN_CORE_ASSERT(scene, "No active scene!");
+		const auto& entityMap = scene->GetEntityMap();
+		ZN_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+		Entity entity = entityMap.at(entityID);
+		ZN_CORE_ASSERT(entity.HasComponent<RigidBody2DComponent>());
+		auto& component = entity.GetComponent<RigidBody2DComponent>();
+		b2Body* body = (b2Body*)component.RuntimeBody;
+		body->ApplyLinearImpulse(*(const b2Vec2*)impulse, body->GetWorldCenter() + *(const b2Vec2*)offset, wake);
+	}
+
 	void* Zenith_Texture2D_Constructor(uint32_t width, uint32_t height)
 	{
 		auto result = Texture2D::Create(TextureFormat::RGBA, width, height);
@@ -226,6 +242,12 @@ namespace Zenith { namespace Script {
 	}
 
 	void Zenith_MaterialInstance_SetVector3(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec3* value)
+	{
+		Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
+		instance->Set(mono_string_to_utf8(uniform), *value);
+	}
+
+	void Zenith_MaterialInstance_SetVector4(Ref<MaterialInstance>* _this, MonoString* uniform, glm::vec4* value)
 	{
 		Ref<MaterialInstance>& instance = *(Ref<MaterialInstance>*)_this;
 		instance->Set(mono_string_to_utf8(uniform), *value);
