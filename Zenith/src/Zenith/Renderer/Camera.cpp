@@ -39,7 +39,8 @@ namespace Zenith {
 	}
 
 	void Camera::Focus()
-	{}
+	{
+	}
 
 	std::pair<float, float> Camera::PanSpeed() const
 	{
@@ -68,13 +69,11 @@ namespace Zenith {
 
 	void Camera::OnUpdate(Timestep ts)
 	{
-		if (Input::IsKeyPressed(GLFW_KEY_LEFT_ALT))
+		if (Input::IsKeyPressed(KeyCode::LeftAlt))
 		{
 			const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
-			glm::vec2 delta = mouse - m_InitialMousePosition;
+			glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
 			m_InitialMousePosition = mouse;
-
-			delta *= ts.GetSeconds();
 
 			if (Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
 				MousePan(delta);
@@ -144,7 +143,7 @@ namespace Zenith {
 		return m_FocalPoint - GetForwardDirection() * m_Distance;
 	}
 
-	glm::quat Camera::GetOrientation()
+	glm::quat Camera::GetOrientation() const
 	{
 		return glm::quat(glm::vec3(-m_Pitch, -m_Yaw, 0.0f));
 	}

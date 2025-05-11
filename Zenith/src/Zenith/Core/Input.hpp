@@ -1,11 +1,13 @@
 #pragma once
 
+#include "KeyCodes.hpp"
+
 namespace Zenith {
 
 	class Input
 	{
 	public:
-		static bool IsKeyPressed(int keycode);
+		static bool IsKeyPressed(KeyCode keycode);
 
 		static bool IsMouseButtonPressed(int button);
 		static float GetMouseX();

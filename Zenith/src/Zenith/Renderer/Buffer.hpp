@@ -107,7 +107,7 @@ namespace Zenith {
 		None = 0, Static = 1, Dynamic = 2
 	};
 
-	class VertexBuffer
+	class VertexBuffer : public RefCounted
 	{
 	public:
 		virtual ~VertexBuffer() {}
@@ -118,14 +118,14 @@ namespace Zenith {
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
-		virtual uint32_t GetSize() const = 0;
+		virtual unsigned int GetSize() const = 0;
 		virtual RendererID GetRendererID() const = 0;
 
 		static Ref<VertexBuffer> Create(void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
 		static Ref<VertexBuffer> Create(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
 	};
 
-	class IndexBuffer
+	class IndexBuffer : public RefCounted
 	{
 	public:
 		virtual ~IndexBuffer() {}
@@ -135,9 +135,10 @@ namespace Zenith {
 
 		virtual uint32_t GetCount() const = 0;
 
-		virtual uint32_t GetSize() const = 0;
+		virtual unsigned int GetSize() const = 0;
 		virtual RendererID GetRendererID() const = 0;
 
+		static Ref<IndexBuffer> Create(uint32_t size);
 		static Ref<IndexBuffer> Create(void* data, uint32_t size = 0);
 	};
 

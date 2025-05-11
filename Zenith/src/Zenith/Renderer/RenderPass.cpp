@@ -12,7 +12,7 @@ namespace Zenith {
 		switch (RendererAPI::Current())
 		{
 		case RendererAPIType::None:    ZN_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPIType::OpenGL:  return std::make_shared<OpenGLRenderPass>(spec);
+		case RendererAPIType::OpenGL:  return Ref<OpenGLRenderPass>::Create(spec);
 		}
 
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI!");

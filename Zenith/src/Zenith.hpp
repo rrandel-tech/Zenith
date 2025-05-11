@@ -15,6 +15,7 @@
 #include "Zenith/Core/Log.hpp"
 #include "Zenith/Core/TimeStep.hpp"
 #include "Zenith/Core/Input.hpp"
+#include "Zenith/Core/Timer.hpp"
 
 #include "Zenith/Core/Events/Event.hpp"
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
@@ -40,3 +41,4 @@
 
 #include "Zenith/Scene/Entity.hpp"
 #include "Zenith/Scene/Scene.hpp"
+#include "Zenith/Scene/Components.hpp"

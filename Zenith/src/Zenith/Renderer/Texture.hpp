@@ -21,7 +21,7 @@ namespace Zenith {
 		Repeat = 2
 	};
 
-	class Texture
+	class Texture : public RefCounted
 	{
 	public:
 		virtual ~Texture() {}

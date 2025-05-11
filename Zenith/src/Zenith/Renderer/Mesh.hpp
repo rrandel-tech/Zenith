@@ -126,7 +126,7 @@ namespace Zenith {
 		std::string NodeName, MeshName;
 	};
 
-	class Mesh
+	class Mesh : public RefCounted
 	{
 	public:
 		Mesh(const std::string& filename);
