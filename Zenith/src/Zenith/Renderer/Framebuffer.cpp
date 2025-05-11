@@ -11,8 +11,8 @@ namespace Zenith {
 
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None:		return nullptr;
-		case RendererAPIType::OpenGL:	result = Ref<OpenGLFramebuffer>::Create(spec);
+			case RendererAPIType::None:		return nullptr;
+			case RendererAPIType::OpenGL:	result = Ref<OpenGLFramebuffer>::Create(spec);
 		}
 		FramebufferPool::GetGlobal()->Add(result);
 		return result;
@@ -27,7 +27,7 @@ namespace Zenith {
 
 	FramebufferPool::~FramebufferPool()
 	{
-
+		
 	}
 
 	std::weak_ptr<Framebuffer> FramebufferPool::AllocateBuffer()

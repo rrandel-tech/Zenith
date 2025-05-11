@@ -11,9 +11,9 @@ namespace Zenith {
 
 	enum class MaterialFlag
 	{
-		None = BIT(0),
-		DepthTest = BIT(1),
-		Blend = BIT(2)
+		None       = BIT(0),
+		DepthTest  = BIT(1),
+		Blend      = BIT(2)
 	};
 
 	class Material : public RefCounted
@@ -36,7 +36,7 @@ namespace Zenith {
 			ZN_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
 			auto& buffer = GetUniformBufferTarget(decl);
 			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
-
+			
 			for (auto mi : m_MaterialInstances)
 				mi->OnMaterialValueUpdated(decl);
 		}
@@ -96,7 +96,7 @@ namespace Zenith {
 			// ZN_CORE_ASSERT(decl, "Could not find uniform with name '{0}'", name);
 			ZN_CORE_ASSERT(decl, "Could not find uniform with name 'x'");
 			auto& buffer = GetUniformBufferTarget(decl);
-			buffer.Write((byte*)&value, decl->GetSize(), decl->GetOffset());
+			buffer.Write((byte*)& value, decl->GetSize(), decl->GetOffset());
 
 			m_OverriddenValues.insert(name);
 		}

@@ -3,7 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "Zenith/Core/TimeStep.hpp"
+#include "Zenith/Core/Timestep.hpp"
 
 #include "Zenith/Renderer/VertexArray.hpp"
 #include "Zenith/Renderer/Buffer.hpp"
@@ -97,7 +97,7 @@ namespace Zenith {
 					return;
 				}
 			}
-
+			
 			// should never get here - more bones than we have space for
 			ZN_CORE_ASSERT(false, "Too many bones!");
 		}
@@ -108,8 +108,7 @@ namespace Zenith {
 		Vertex V0, V1, V2;
 
 		Triangle(const Vertex& v0, const Vertex& v1, const Vertex& v2)
-			: V0(v0), V1(v1), V2(v2) {
-		}
+			: V0(v0), V1(v1), V2(v2) {}
 	};
 
 	class Submesh
@@ -159,7 +158,7 @@ namespace Zenith {
 		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
 	private:
 		std::vector<Submesh> m_Submeshes;
-
+		
 		std::unique_ptr<Assimp::Importer> m_Importer;
 
 		glm::mat4 m_InverseTransform;
@@ -197,5 +196,4 @@ namespace Zenith {
 		friend class Renderer;
 		friend class SceneHierarchyPanel;
 	};
-
 }

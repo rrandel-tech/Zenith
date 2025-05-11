@@ -8,6 +8,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -73,7 +74,7 @@ namespace Zenith {
 		LogStream::Initialize();
 
 		ZN_CORE_INFO("Loading mesh: {0}", filename.c_str());
-
+		
 		m_Importer = std::make_unique<Assimp::Importer>();
 
 		const aiScene* scene = m_Importer->ReadFile(filename, s_MeshImportFlags);
@@ -171,7 +172,7 @@ namespace Zenith {
 					m_TriangleCache[m].emplace_back(m_StaticVertices[index.V1 + submesh.BaseVertex], m_StaticVertices[index.V2 + submesh.BaseVertex], m_StaticVertices[index.V3 + submesh.BaseVertex]);
 			}
 
-
+			
 		}
 
 		TraverseNodes(scene->mRootNode);
@@ -275,7 +276,7 @@ namespace Zenith {
 				}
 				else
 				{
-					mi->Set("u_AlbedoColor", glm::vec3{ aiColor.r, aiColor.g, aiColor.b });
+					mi->Set("u_AlbedoColor", glm::vec3 { aiColor.r, aiColor.g, aiColor.b });
 					ZN_MESH_LOG("    No albedo map");
 				}
 
@@ -475,7 +476,7 @@ namespace Zenith {
 				{ ShaderDataType::Float2, "a_TexCoord" },
 				{ ShaderDataType::Int4, "a_BoneIDs" },
 				{ ShaderDataType::Float4, "a_BoneWeights" },
-				});
+			});
 			m_VertexArray->AddVertexBuffer(vb);
 		}
 		else
@@ -487,7 +488,7 @@ namespace Zenith {
 				{ ShaderDataType::Float3, "a_Tangent" },
 				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
-				});
+			});
 			m_VertexArray->AddVertexBuffer(vb);
 		}
 
@@ -699,7 +700,7 @@ namespace Zenith {
 				return nodeAnim;
 		}
 		return nullptr;
-	}
+	} 
 
 	void Mesh::BoneTransform(float time)
 	{

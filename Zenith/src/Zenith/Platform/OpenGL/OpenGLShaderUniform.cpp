@@ -31,13 +31,13 @@ namespace Zenith {
 	{
 		switch (type)
 		{
-		case OpenGLShaderUniformDeclaration::Type::INT32:      return 4;
-		case OpenGLShaderUniformDeclaration::Type::FLOAT32:    return 4;
-		case OpenGLShaderUniformDeclaration::Type::VEC2:       return 4 * 2;
-		case OpenGLShaderUniformDeclaration::Type::VEC3:       return 4 * 3;
-		case OpenGLShaderUniformDeclaration::Type::VEC4:       return 4 * 4;
-		case OpenGLShaderUniformDeclaration::Type::MAT3:       return 4 * 3 * 3;
-		case OpenGLShaderUniformDeclaration::Type::MAT4:       return 4 * 4 * 4;
+			case OpenGLShaderUniformDeclaration::Type::INT32:      return 4;
+			case OpenGLShaderUniformDeclaration::Type::FLOAT32:    return 4;
+			case OpenGLShaderUniformDeclaration::Type::VEC2:       return 4 * 2;
+			case OpenGLShaderUniformDeclaration::Type::VEC3:       return 4 * 3;
+			case OpenGLShaderUniformDeclaration::Type::VEC4:       return 4 * 4;
+			case OpenGLShaderUniformDeclaration::Type::MAT3:       return 4 * 3 * 3;
+			case OpenGLShaderUniformDeclaration::Type::MAT4:       return 4 * 4 * 4;
 		}
 		return 0;
 	}
@@ -59,13 +59,13 @@ namespace Zenith {
 	{
 		switch (type)
 		{
-		case OpenGLShaderUniformDeclaration::Type::INT32:      return "int32";
-		case OpenGLShaderUniformDeclaration::Type::FLOAT32:    return "float";
-		case OpenGLShaderUniformDeclaration::Type::VEC2:       return "vec2";
-		case OpenGLShaderUniformDeclaration::Type::VEC3:       return "vec3";
-		case OpenGLShaderUniformDeclaration::Type::VEC4:       return "vec4";
-		case OpenGLShaderUniformDeclaration::Type::MAT3:       return "mat3";
-		case OpenGLShaderUniformDeclaration::Type::MAT4:       return "mat4";
+			case OpenGLShaderUniformDeclaration::Type::INT32:      return "int32";
+			case OpenGLShaderUniformDeclaration::Type::FLOAT32:    return "float";
+			case OpenGLShaderUniformDeclaration::Type::VEC2:       return "vec2";
+			case OpenGLShaderUniformDeclaration::Type::VEC3:       return "vec3";
+			case OpenGLShaderUniformDeclaration::Type::VEC4:       return "vec4";
+			case OpenGLShaderUniformDeclaration::Type::MAT3:       return "mat3";
+			case OpenGLShaderUniformDeclaration::Type::MAT4:       return "mat4";
 		}
 		return "Invalid Type";
 	}
@@ -118,8 +118,8 @@ namespace Zenith {
 	{
 		switch (type)
 		{
-		case Type::TEXTURE2D:	return "sampler2D";
-		case Type::TEXTURECUBE:	return "samplerCube";
+			case Type::TEXTURE2D:	return "sampler2D";
+			case Type::TEXTURECUBE:	return "samplerCube";
 		}
 		return "Invalid Type";
 	}

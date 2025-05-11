@@ -13,6 +13,8 @@ namespace Zenith {
 
 		void SetContext(const Ref<Scene>& scene);
 		void SetSelected(Entity entity);
+		void SetSelectionChangedCallback(const std::function<void(Entity)>& func) { m_SelectionChangedCallback = func; }
+		void SetEntityDeletedCallback(const std::function<void(Entity)>& func) { m_EntityDeletedCallback = func; }
 
 		void OnImGuiRender();
 	private:
@@ -23,6 +25,8 @@ namespace Zenith {
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;
+
+		std::function<void(Entity)> m_SelectionChangedCallback, m_EntityDeletedCallback;
 	};
 
 }

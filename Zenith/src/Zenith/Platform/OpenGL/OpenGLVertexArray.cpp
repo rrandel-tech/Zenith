@@ -11,17 +11,17 @@ namespace Zenith {
 	{
 		switch (type)
 		{
-		case Zenith::ShaderDataType::Float:    return GL_FLOAT;
-		case Zenith::ShaderDataType::Float2:   return GL_FLOAT;
-		case Zenith::ShaderDataType::Float3:   return GL_FLOAT;
-		case Zenith::ShaderDataType::Float4:   return GL_FLOAT;
-		case Zenith::ShaderDataType::Mat3:     return GL_FLOAT;
-		case Zenith::ShaderDataType::Mat4:     return GL_FLOAT;
-		case Zenith::ShaderDataType::Int:      return GL_INT;
-		case Zenith::ShaderDataType::Int2:     return GL_INT;
-		case Zenith::ShaderDataType::Int3:     return GL_INT;
-		case Zenith::ShaderDataType::Int4:     return GL_INT;
-		case Zenith::ShaderDataType::Bool:     return GL_BOOL;
+			case Zenith::ShaderDataType::Float:    return GL_FLOAT;
+			case Zenith::ShaderDataType::Float2:   return GL_FLOAT;
+			case Zenith::ShaderDataType::Float3:   return GL_FLOAT;
+			case Zenith::ShaderDataType::Float4:   return GL_FLOAT;
+			case Zenith::ShaderDataType::Mat3:     return GL_FLOAT;
+			case Zenith::ShaderDataType::Mat4:     return GL_FLOAT;
+			case Zenith::ShaderDataType::Int:      return GL_INT;
+			case Zenith::ShaderDataType::Int2:     return GL_INT;
+			case Zenith::ShaderDataType::Int3:     return GL_INT;
+			case Zenith::ShaderDataType::Int4:     return GL_INT;
+			case Zenith::ShaderDataType::Bool:     return GL_BOOL;
 		}
 
 		ZN_CORE_ASSERT(false, "Unknown ShaderDataType!");
@@ -32,14 +32,15 @@ namespace Zenith {
 	{
 		Renderer::Submit([this]() {
 			glCreateVertexArrays(1, &m_RendererID);
-			});
+		});
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
-		Renderer::Submit([this]() {
-			glDeleteVertexArrays(1, &m_RendererID);
-			});
+		GLuint rendererID = m_RendererID;
+		Renderer::Submit([rendererID]() {
+			glDeleteVertexArrays(1, &rendererID);
+		});
 	}
 
 	void OpenGLVertexArray::Bind() const
@@ -47,7 +48,7 @@ namespace Zenith {
 		Ref<const OpenGLVertexArray> instance = this;
 		Renderer::Submit([instance]() {
 			glBindVertexArray(instance->m_RendererID);
-			});
+		});
 	}
 
 	void OpenGLVertexArray::Unbind() const
@@ -55,7 +56,7 @@ namespace Zenith {
 		Ref<const OpenGLVertexArray> instance = this;
 		Renderer::Submit([this]() {
 			glBindVertexArray(0);
-			});
+		});
 	}
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
@@ -91,7 +92,7 @@ namespace Zenith {
 				}
 				instance->m_VertexBufferIndex++;
 			}
-			});
+		});
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 

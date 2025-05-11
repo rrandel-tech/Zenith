@@ -23,7 +23,7 @@ namespace Zenith {
 		*(RenderCommandFn*)m_CommandBufferPtr = fn;
 		m_CommandBufferPtr += sizeof(RenderCommandFn);
 
-		*(int*)m_CommandBufferPtr = size;
+		*(uint32_t*)m_CommandBufferPtr = size;
 		m_CommandBufferPtr += sizeof(uint32_t);
 
 		void* memory = m_CommandBufferPtr;
@@ -35,6 +35,8 @@ namespace Zenith {
 
 	void RenderCommandQueue::Execute()
 	{
+		//ZN_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", m_CommandCount, (m_CommandBufferPtr - m_CommandBuffer));
+
 		byte* buffer = m_CommandBuffer;
 
 		for (uint32_t i = 0; i < m_CommandCount; i++)

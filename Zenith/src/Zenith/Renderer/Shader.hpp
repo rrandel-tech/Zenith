@@ -14,7 +14,7 @@ namespace Zenith
 {
 	struct ShaderUniform
 	{
-
+		
 	};
 
 	struct ShaderUniformCollection

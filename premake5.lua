@@ -59,8 +59,13 @@ group ""
 
 group "Core"
 include "Zenith"
+include "Zenith-ScriptCore"
 group ""
 
 group "Tools"
 include "Zenith-Editor"
+group ""
+
+group "Test"
+include "ExampleApp"
 group ""

@@ -22,11 +22,11 @@ namespace Zenith {
 	};
 
 	static RendererData s_Data;
-
+	
 	void Renderer::Init()
 	{
 		s_Data.m_ShaderLibrary = Ref<ShaderLibrary>::Create();
-		Renderer::Submit([]() { RendererAPI::Init(); });
+		Renderer::Submit([](){ RendererAPI::Init(); });
 
 		Renderer::GetShaderLibrary()->Load("Resources/Shaders/ZenithPBR_Static.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/Shaders/ZenithPBR_Anim.glsl");
@@ -80,16 +80,16 @@ namespace Zenith {
 
 	void Renderer::Clear()
 	{
-		Renderer::Submit([]() {
+		Renderer::Submit([](){
 			RendererAPI::Clear(0.0f, 0.0f, 0.0f, 1.0f);
-			});
+		});
 	}
 
 	void Renderer::Clear(float r, float g, float b, float a)
 	{
 		Renderer::Submit([=]() {
 			RendererAPI::Clear(r, g, b, a);
-			});
+		});
 	}
 
 	void Renderer::ClearMagenta()
@@ -105,14 +105,14 @@ namespace Zenith {
 	{
 		Renderer::Submit([=]() {
 			RendererAPI::DrawIndexed(count, type, depthTest);
-			});
+		});
 	}
 
 	void Renderer::SetLineThickness(float thickness)
 	{
 		Renderer::Submit([=]() {
 			RendererAPI::SetLineThickness(thickness);
-			});
+		});
 	}
 
 	void Renderer::WaitAndRender()
@@ -126,14 +126,14 @@ namespace Zenith {
 
 		// TODO: Convert all of this into a render command buffer
 		s_Data.m_ActiveRenderPass = renderPass;
-
+		
 		renderPass->GetSpecification().TargetFramebuffer->Bind();
 		if (clear)
 		{
 			const glm::vec4& clearColor = renderPass->GetSpecification().TargetFramebuffer->GetSpecification().ClearColor;
 			Renderer::Submit([=]() {
 				RendererAPI::Clear(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-				});
+			});
 		}
 	}
 
@@ -184,7 +184,7 @@ namespace Zenith {
 		for (Submesh& submesh : mesh->m_Submeshes)
 		{
 			// Material
-			auto material = materials[submesh.MaterialIndex];
+			auto material = overrideMaterial ? overrideMaterial : materials[submesh.MaterialIndex];
 			auto shader = material->GetShader();
 			material->Bind();
 
@@ -199,13 +199,13 @@ namespace Zenith {
 			shader->SetMat4("u_Transform", transform * submesh.Transform);
 
 			Renderer::Submit([submesh, material]() {
-				if (material->GetFlag(MaterialFlag::DepthTest))
+				if (material->GetFlag(MaterialFlag::DepthTest))	
 					glEnable(GL_DEPTH_TEST);
 				else
 					glDisable(GL_DEPTH_TEST);
 
 				glDrawElementsBaseVertex(GL_TRIANGLES, submesh.IndexCount, GL_UNSIGNED_INT, (void*)(sizeof(uint32_t) * submesh.BaseIndex), submesh.BaseVertex);
-				});
+			});
 		}
 	}
 

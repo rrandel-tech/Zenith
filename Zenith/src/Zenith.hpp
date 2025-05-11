@@ -41,4 +41,6 @@
 
 #include "Zenith/Scene/Entity.hpp"
 #include "Zenith/Scene/Scene.hpp"
+#include "Zenith/Scene/SceneCamera.hpp"
+#include "Zenith/Scene/SceneSerializer.hpp"
 #include "Zenith/Scene/Components.hpp"

@@ -49,25 +49,25 @@ namespace Zenith {
 			Parse();
 
 		Renderer::Submit([=]()
+		{
+			if (m_RendererID)
+				glDeleteProgram(m_RendererID);
+
+			CompileAndUploadShader();
+			if (!m_IsCompute)
 			{
-				if (m_RendererID)
-					glDeleteProgram(m_RendererID);
+				ResolveUniforms();
+				ValidateUniforms();
+			}
 
-				CompileAndUploadShader();
-				if (!m_IsCompute)
-				{
-					ResolveUniforms();
-					ValidateUniforms();
-				}
+			if (m_Loaded)
+			{
+				for (auto& callback : m_ShaderReloadedCallbacks)
+					callback();
+			}
 
-				if (m_Loaded)
-				{
-					for (auto& callback : m_ShaderReloadedCallbacks)
-						callback();
-				}
-
-				m_Loaded = true;
-			});
+			m_Loaded = true;
+		});
 	}
 
 	void OpenGLShader::AddShaderReloadedCallback(const ShaderReloadedCallback& callback)
@@ -79,7 +79,7 @@ namespace Zenith {
 	{
 		Renderer::Submit([=]() {
 			glUseProgram(m_RendererID);
-			});
+		});
 	}
 
 	std::string OpenGLShader::ReadShaderFromFile(const std::string& filepath) const
@@ -92,13 +92,12 @@ namespace Zenith {
 			result.resize(in.tellg());
 			in.seekg(0, std::ios::beg);
 			in.read(&result[0], result.size());
-			in.close();
 		}
 		else
 		{
 			ZN_CORE_ASSERT(false, "Could not load shader!");
 		}
-
+		in.close();
 		return result;
 	}
 
@@ -552,7 +551,7 @@ namespace Zenith {
 			std::string& source = kv.second;
 
 			GLuint shaderRendererID = glCreateShader(type);
-			const GLchar* sourceCstr = (const GLchar*)source.c_str();
+			const GLchar *sourceCstr = (const GLchar *)source.c_str();
 			glShaderSource(shaderRendererID, 1, &sourceCstr, 0);
 
 			glCompileShader(shaderRendererID);
@@ -585,7 +584,7 @@ namespace Zenith {
 
 		// Note the different functions here: glGetProgram* instead of glGetShader*.
 		GLint isLinked = 0;
-		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
+		glGetProgramiv(program, GL_LINK_STATUS, (int *)&isLinked);
 		if (isLinked == GL_FALSE)
 		{
 			GLint maxLength = 0;
@@ -615,7 +614,7 @@ namespace Zenith {
 		Renderer::Submit([this, buffer]() {
 			glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_VSMaterialUniformBuffer, buffer);
-			});
+		});
 	}
 
 	void OpenGLShader::SetPSMaterialUniformBuffer(Buffer buffer)
@@ -623,7 +622,7 @@ namespace Zenith {
 		Renderer::Submit([this, buffer]() {
 			glUseProgram(m_RendererID);
 			ResolveAndSetUniforms(m_PSMaterialUniformBuffer, buffer);
-			});
+		});
 	}
 
 	void OpenGLShader::ResolveAndSetUniforms(const Ref<OpenGLShaderUniformBufferDeclaration>& decl, Buffer buffer)
@@ -751,38 +750,38 @@ namespace Zenith {
 			const UniformDecl& decl = uniformBuffer.GetUniforms()[i];
 			switch (decl.Type)
 			{
-			case UniformType::Float:
-			{
-				const std::string& name = decl.Name;
-				float value = *(float*)(uniformBuffer.GetBuffer() + decl.Offset);
-				Renderer::Submit([=]() {
-					UploadUniformFloat(name, value);
+				case UniformType::Float:
+				{
+					const std::string& name = decl.Name;
+					float value = *(float*)(uniformBuffer.GetBuffer() + decl.Offset);
+					Renderer::Submit([=]() {
+						UploadUniformFloat(name, value);
 					});
-			}
-			case UniformType::Float3:
-			{
-				const std::string& name = decl.Name;
-				glm::vec3& values = *(glm::vec3*)(uniformBuffer.GetBuffer() + decl.Offset);
-				Renderer::Submit([=]() {
-					UploadUniformFloat3(name, values);
+				}
+				case UniformType::Float3:
+				{
+					const std::string& name = decl.Name;
+					glm::vec3& values = *(glm::vec3*)(uniformBuffer.GetBuffer() + decl.Offset);
+					Renderer::Submit([=]() {
+						UploadUniformFloat3(name, values);
 					});
-			}
-			case UniformType::Float4:
-			{
-				const std::string& name = decl.Name;
-				glm::vec4& values = *(glm::vec4*)(uniformBuffer.GetBuffer() + decl.Offset);
-				Renderer::Submit([=]() {
-					UploadUniformFloat4(name, values);
+				}
+				case UniformType::Float4:
+				{
+					const std::string& name = decl.Name;
+					glm::vec4& values = *(glm::vec4*)(uniformBuffer.GetBuffer() + decl.Offset);
+					Renderer::Submit([=]() {
+						UploadUniformFloat4(name, values);
 					});
-			}
-			case UniformType::Matrix4x4:
-			{
-				const std::string& name = decl.Name;
-				glm::mat4& values = *(glm::mat4*)(uniformBuffer.GetBuffer() + decl.Offset);
-				Renderer::Submit([=]() {
-					UploadUniformMat4(name, values);
+				}
+				case UniformType::Matrix4x4:
+				{
+					const std::string& name = decl.Name;
+					glm::mat4& values = *(glm::mat4*)(uniformBuffer.GetBuffer() + decl.Offset);
+					Renderer::Submit([=]() {
+						UploadUniformMat4(name, values);
 					});
-			}
+				}
 			}
 		}
 	}
@@ -791,28 +790,28 @@ namespace Zenith {
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat(name, value);
-			});
+		});
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformInt(name, value);
-			});
+		});
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformFloat3(name, value);
-			});
+		});
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		Renderer::Submit([=]() {
 			UploadUniformMat4(name, value);
-			});
+		});
 	}
 
 	void OpenGLShader::SetMat4FromRenderThread(const std::string& name, const glm::mat4& value, bool bind)
@@ -833,7 +832,7 @@ namespace Zenith {
 	{
 		Renderer::Submit([=]() {
 			UploadUniformIntArray(name, values, size);
-			});
+		});
 	}
 
 	void OpenGLShader::UploadUniformInt(uint32_t location, int32_t value)

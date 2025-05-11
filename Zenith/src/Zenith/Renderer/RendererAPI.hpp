@@ -29,6 +29,8 @@ namespace Zenith {
 
 	class RendererAPI
 	{
+	private:
+
 	public:
 		static void Init();
 		static void Shutdown();

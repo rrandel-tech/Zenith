@@ -10,8 +10,8 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None:    return nullptr;
-		case RendererAPIType::OpenGL:  return Ref<OpenGLVertexBuffer>::Create(data, size, usage);
+			case RendererAPIType::None:    return nullptr;
+			case RendererAPIType::OpenGL:  return Ref<OpenGLVertexBuffer>::Create(data, size, usage);
 		}
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -21,19 +21,19 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None:    return nullptr;
-		case RendererAPIType::OpenGL:  return Ref<OpenGLVertexBuffer>::Create(size, usage);
+			case RendererAPIType::None:    return nullptr;
+			case RendererAPIType::OpenGL:  return Ref<OpenGLVertexBuffer>::Create(size, usage);
 		}
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-
+	
 	Ref<IndexBuffer> IndexBuffer::Create(uint32_t size)
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None:    return nullptr;
-		case RendererAPIType::OpenGL:  return Ref<OpenGLIndexBuffer>::Create(size);
+			case RendererAPIType::None:    return nullptr;
+			case RendererAPIType::OpenGL:  return Ref<OpenGLIndexBuffer>::Create(size);
 		}
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
@@ -43,10 +43,11 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None:    return nullptr;
-		case RendererAPIType::OpenGL:  return Ref<OpenGLIndexBuffer>::Create(data, size);
+			case RendererAPIType::None:    return nullptr;
+			case RendererAPIType::OpenGL:  return Ref<OpenGLIndexBuffer>::Create(data, size);
 		}
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
+
 }

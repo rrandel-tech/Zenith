@@ -10,8 +10,8 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None:    ZN_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-		case RendererAPIType::OpenGL:  return Ref<OpenGLVertexArray>::Create();
+			case RendererAPIType::None:    ZN_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPIType::OpenGL:  return Ref<OpenGLVertexArray>::Create();
 		}
 
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");

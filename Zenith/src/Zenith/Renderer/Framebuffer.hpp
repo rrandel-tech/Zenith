@@ -8,8 +8,8 @@ namespace Zenith {
 
 	enum class FramebufferFormat
 	{
-		None = 0,
-		RGBA8 = 1,
+		None    = 0,
+		RGBA8   = 1,
 		RGBA16F = 2
 	};
 
@@ -20,7 +20,7 @@ namespace Zenith {
 		glm::vec4 ClearColor;
 		FramebufferFormat Format;
 		uint32_t Samples = 1; // multisampling
-
+		
 		// SwapChainTarget = screen buffer (i.e. no framebuffer)
 		bool SwapChainTarget = false;
 	};

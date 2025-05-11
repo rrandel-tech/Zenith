@@ -10,8 +10,8 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None: return nullptr;
-		case RendererAPIType::OpenGL: return Ref<OpenGLTexture2D>::Create(format, width, height, wrap);
+			case RendererAPIType::None: return nullptr;
+			case RendererAPIType::OpenGL: return Ref<OpenGLTexture2D>::Create(format, width, height, wrap);
 		}
 		return nullptr;
 	}
@@ -20,8 +20,8 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None: return nullptr;
-		case RendererAPIType::OpenGL: return Ref<OpenGLTexture2D>::Create(path, srgb);
+			case RendererAPIType::None: return nullptr;
+			case RendererAPIType::OpenGL: return Ref<OpenGLTexture2D>::Create(path, srgb);
 		}
 		return nullptr;
 	}
@@ -30,8 +30,8 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None: return nullptr;
-		case RendererAPIType::OpenGL: return Ref<OpenGLTextureCube>::Create(format, width, height);
+			case RendererAPIType::None: return nullptr;
+			case RendererAPIType::OpenGL: return Ref<OpenGLTextureCube>::Create(format, width, height);
 		}
 		return nullptr;
 	}
@@ -40,8 +40,8 @@ namespace Zenith {
 	{
 		switch (RendererAPI::Current())
 		{
-		case RendererAPIType::None: return nullptr;
-		case RendererAPIType::OpenGL: return Ref<OpenGLTextureCube>::Create(path);
+			case RendererAPIType::None: return nullptr;
+			case RendererAPIType::OpenGL: return Ref<OpenGLTextureCube>::Create(path);
 		}
 		return nullptr;
 	}
@@ -50,8 +50,8 @@ namespace Zenith {
 	{
 		switch (format)
 		{
-		case TextureFormat::RGB:    return 3;
-		case TextureFormat::RGBA:   return 4;
+			case TextureFormat::RGB:    return 3;
+			case TextureFormat::RGBA:   return 4;
 		}
 		return 0;
 	}

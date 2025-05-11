@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Zenith/Renderer/Shader.hpp"
-#include <Glad/glad.h>
+#include <glad/glad.h>
 
 #include "OpenGLShaderUniform.hpp"
 

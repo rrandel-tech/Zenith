@@ -20,7 +20,7 @@ project "Zenith"
 		"vendor/yaml-cpp/include/**.h",
 	}
 
-	includedirs { "src/", "vendor/" }
+	includedirs { "src/", "vendor/", "vendor/mono/include" }
 
 	IncludeDependencies()
 
@@ -32,7 +32,7 @@ project "Zenith"
 	filter "system:windows"
 		systemversion "latest"
 		defines { "ZN_PLATFORM_WINDOWS" }
-		links { "opengl32.lib" }
+		links { "opengl32.lib", "vendor/mono/lib/Debug/mono-2.0-sgen.lib" }
 
 	filter "system:linux"
 		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID", "BACKWARD_HAS_DW", "BACKWARD_HAS_LIBUNWIND" }
