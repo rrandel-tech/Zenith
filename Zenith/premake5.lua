@@ -5,13 +5,13 @@ project "Zenith"
 	objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
 
 	pchheader "znpch.hpp"
-	pchsource "src/znpch.cpp"
+	pchsource "Source/znpch.cpp"
 
 	files {
-		"src/**.h",
-		"src/**.c",
-		"src/**.hpp",
-		"src/**.cpp",
+		"Source/**.h",
+		"Source/**.c",
+		"Source/**.hpp",
+		"Source/**.cpp",
 
 		"vendor/FastNoise/**.cpp",
 
@@ -20,7 +20,7 @@ project "Zenith"
 		"vendor/yaml-cpp/include/**.h",
 	}
 
-	includedirs { "src/", "vendor/", "vendor/mono/include" }
+	includedirs { "Source/", "vendor/" }
 
 	IncludeDependencies()
 
@@ -32,7 +32,7 @@ project "Zenith"
 	filter "system:windows"
 		systemversion "latest"
 		defines { "ZN_PLATFORM_WINDOWS" }
-		links { "opengl32.lib", "vendor/mono/lib/Debug/mono-2.0-sgen.lib" }
+		links { "opengl32.lib" }
 
 	filter "system:linux"
 		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID", "BACKWARD_HAS_DW", "BACKWARD_HAS_LIBUNWIND" }

@@ -27,10 +27,6 @@ Dependencies = {
 	GLM = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/glm",
 	},
-	Box2D = {
-		LibName = "Box2D",
-		IncludeDir = "%{wks.location}/Zenith/vendor/Box2D/include",
-	},
 	EnTT = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/entt/include",
 	},

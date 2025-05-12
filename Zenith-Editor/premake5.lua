@@ -9,19 +9,19 @@ project "Zenith-Editor"
 	defines { "GLM_FORCE_DEPTH_ZERO_TO_ONE" }
 
 	files  { 
-		"src/**.h",
-		"src/**.c",
-		"src/**.hpp",
-		"src/**.cpp",
+		"Source/**.h",
+		"Source/**.c",
+		"Source/**.hpp",
+		"Source/**.cpp",
 
 		-- Shaders
 		"Resources/Shaders/**.glsl"
 	}
 
 	includedirs  {
-		"src/",
+		"Source/",
 
-		"../Zenith/src/",
+		"../Zenith/Source/",
 		"../Zenith/vendor/"
 	}
 
@@ -32,13 +32,11 @@ project "Zenith-Editor"
 	filter { "system:windows", "configurations:Debug or configurations:Debug-AS" }
 		postbuildcommands {
 			'{COPY} "../Zenith/vendor/assimp/bin/windows/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}"',
-			'{COPY} "../Zenith/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
 		}
 
 	filter { "system:windows", "configurations:Release or configurations:Dist" }
 		postbuildcommands {
 			'{COPY} "../Zenith/vendor/assimp/bin/windows/Release/assimp-vc143-mt.dll" "%{cfg.targetdir}"',
-			'{COPY} "../Zenith/vendor/mono/bin/Debug/mono-2.0-sgen.dll" "%{cfg.targetdir}"'
 		}
 
 	filter "system:linux"
