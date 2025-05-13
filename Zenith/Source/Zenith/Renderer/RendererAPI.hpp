@@ -48,10 +48,11 @@ namespace Zenith {
 		}
 
 		static RendererAPIType Current() { return s_CurrentRendererAPI; }
+		static void SetAPI(RendererAPIType api);
 	private:
 		static void LoadRequiredAssets();
 	private:
-		static RendererAPIType s_CurrentRendererAPI;
+		inline static RendererAPIType s_CurrentRendererAPI = RendererAPIType::OpenGL;
 	};
 
 }

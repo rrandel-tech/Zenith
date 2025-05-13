@@ -11,7 +11,12 @@
 
 namespace Zenith {
 
-	RendererAPIType RendererAPI::s_CurrentRendererAPI = RendererAPIType::OpenGL;
+	void RendererAPI::SetAPI(RendererAPIType api)
+	{
+		// TODO: make sure this is called at a valid time
+		ZN_CORE_ASSERT(api == RendererAPIType::OpenGL, "OpenGL is currently the only supported Renderer API");
+		s_CurrentRendererAPI = api;
+	}
 
 	struct RendererData
 	{

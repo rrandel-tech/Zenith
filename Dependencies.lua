@@ -5,56 +5,120 @@ function firstToUpper(str)
 	return (str:gsub("^%l", string.upper))
 end
 
+VULKAN_SDK = os.getenv("VULKAN_SDK")
+
 Dependencies = {
+	-- Platform-Specific System Libraries
+	WS2 = {
+		Windows = { LibName = "ws2_32" },
+	},
+	Dbghelp = {
+		Windows = { LibName = "Dbghelp" },
+	},
+
+	-- Graphics & Rendering
+	Vulkan = {
+		Windows = {
+			LibName = "vulkan-1",
+			IncludeDir = "%{VULKAN_SDK}/Include/",
+			LibDir = "%{VULKAN_SDK}/Lib/",
+		},
+		Linux = {
+			LibName = "vulkan",
+			IncludeDir = "%{VULKAN_SDK}/include/",
+			LibDir = "%{VULKAN_SDK}/lib/",
+		},
+	},
+
 	GLFW = {
 		LibName = "GLFW",
 		IncludeDir = "%{wks.location}/Zenith/vendor/GLFW/include"
 	},
-	Assimp = {
-		IncludeDir = "%{wks.location}/Zenith/vendor/assimp/include",
-		Windows = { LibName = "assimp-vc143-mt", DebugLibName = "assimp-vc143-mtd", LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/windows/%{cfg.buildcfg}/" },
-		Linux = { LibName = "assimp", LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/linux/" },
-		Configurations = "Debug,Release"
-	},
-	ImGui = {
-		LibName = "ImGui",
-		IncludeDir = "%{wks.location}/Zenith/vendor/imgui",
-	},
+
 	Glad = {
 		LibName = "Glad",
 		IncludeDir = "%{wks.location}/Zenith/vendor/Glad/include"
 	},
+
+	ImGui = {
+		LibName = "ImGui",
+		IncludeDir = "%{wks.location}/Zenith/vendor/imgui",
+	},
+
+	-- Math & ECS
 	GLM = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/glm",
 	},
+
 	EnTT = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/entt/include",
 	},
+
+	-- Tools & Utility Libs
 	FastNoise = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/FastNoise",
 	},
+
 	JoltPhysics = {
 		LibName = "JoltPhysics",
 		IncludeDir = "%{wks.location}/Zenith/vendor/JoltPhysics/JoltPhysics",
 	},
+
 	YAML_CPP = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/yaml-cpp/include",
 	},
+
 	Tracy = {
 		LibName = "Tracy",
 		IncludeDir = "%{wks.location}/Zenith/vendor/tracy/tracy/public",
 	},
+
 	STB = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/stb/include",
 	},
+
 	BackwardCPP = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/backward-cpp"
 	},
-	WS2 = {
-		Windows = { LibName = "ws2_32", },
+
+	-- Asset Loading
+	Assimp = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/assimp/include",
+		Windows = {
+			LibName = "assimp-vc143-mt",
+			DebugLibName = "assimp-vc143-mtd",
+			LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/windows/%{cfg.buildcfg}/",
+		},
+		Linux = {
+			LibName = "assimp",
+			LibDir = "%{wks.location}/Zenith/vendor/assimp/bin/linux/",
+		},
+		Configurations = "Debug,Release"
 	},
-	Dbghelp = {
-		Windows = { LibName = "	Dbghelp" },
+
+	-- SPIR-V Cross Compilation
+	SPIRVCrossCore = {
+		LibName = "spirv-cross-core",
+		Windows = {
+			DebugLibName = "spirv-cross-cored",
+		},
+		Configurations = "Debug,Release"
+	},
+
+	SPIRVCrossGLSL = {
+		LibName = "spirv-cross-glsl",
+		Windows = {
+			DebugLibName = "spirv-cross-glsld",
+		},
+		Configurations = "Debug,Release"
+	},
+
+	SPIRVTools = {
+		LibName = "SPIRV-Tools",
+		Windows = {
+			DebugLibName = "SPIRV-Toolsd",
+		},
+		Configurations = "Debug,Release"
 	},
 }
 
