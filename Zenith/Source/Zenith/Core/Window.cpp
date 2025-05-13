@@ -17,14 +17,14 @@ namespace Zenith {
 
 	static bool s_GLFWInitialized = false;
 
-	Window* Window::Create(const WindowProps& props)
+	Window* Window::Create(const WindowSpecification& specification)
 	{
-		return new Window(props);
+		return new Window(specification);
 	}
 
-	Window::Window(const WindowProps& props)
+	Window::Window(const WindowSpecification& props)
+		: m_Specification(props)
 	{
-		Init(props);
 	}
 
 	Window::~Window()
@@ -32,13 +32,13 @@ namespace Zenith {
 		Shutdown();
 	}
 
-	void Window::Init(const WindowProps& props)
+	void Window::Init()
 	{
-		m_Data.Title = props.Title;
-		m_Data.Width = props.Width;
-		m_Data.Height = props.Height;
+		m_Data.Title = m_Specification.Title;
+		m_Data.Width = m_Specification.Width;
+		m_Data.Height = m_Specification.Height;
 
-		ZN_CORE_INFO("Creating window {0} ({1}x{2})", props.Title, props.Width, props.Height);
+		ZN_CORE_INFO("Creating window {0} ({1}, {2})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
 
 		if (!s_GLFWInitialized)
 		{
@@ -50,21 +50,44 @@ namespace Zenith {
 			s_GLFWInitialized = true;
 		}
 
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		ZN_CORE_ASSERT(m_Window, "GLFW window creation failed!");
+		if (!m_Specification.Decorated)
+		{
+			// This removes titlebar on all platforms
+			// and all of the native window effects on non-Windows platforms
+#ifdef ZN_PLATFORM_WINDOWS
+			glfwWindowHint(GLFW_TITLEBAR, false);
+#else
+			glfwWindowHint(GLFW_DECORATED, false);
+#endif
+		}
+
+		if (m_Specification.Fullscreen)
+		{
+			GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+
+			glfwWindowHint(GLFW_DECORATED, false);
+			glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+			glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+			glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+			glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+			m_Window = glfwCreateWindow(mode->width, mode->height, m_Data.Title.c_str(), primaryMonitor, nullptr);
+		}
+		else
+		{
+			m_Window = glfwCreateWindow((int)m_Specification.Width, (int)m_Specification.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		}
 
 		glfwMakeContextCurrent(m_Window);
+		SetVSync(m_Specification.VSync);
+
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ZN_CORE_ASSERT(status, "Failed to initialize Glad!");
-		glfwMaximizeWindow(m_Window);
-
+		//glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-		RegisterGLFWCallbacks();
 
-		int width, height;
-		glfwGetWindowSize(m_Window, &width, &height);
-		m_Data.Width = width;
-		m_Data.Height = height;
+		RegisterGLFWCallbacks();
 
 		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
@@ -74,6 +97,14 @@ namespace Zenith {
 		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNESW] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
 		m_ImGuiMouseCursors[ImGuiMouseCursor_ResizeNWSE] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);  // FIXME: GLFW doesn't have this.
 		m_ImGuiMouseCursors[ImGuiMouseCursor_Hand] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+
+		// Update window size to actual size
+		{
+			int width, height;
+			glfwGetWindowSize(m_Window, &width, &height);
+			m_Data.Width = width;
+			m_Data.Height = height;
+		}
 	}
 
 	void Window::RegisterGLFWCallbacks()
@@ -165,10 +196,29 @@ namespace Zenith {
 			});
 	}
 
+	void Window::Shutdown()
+	{
+		if (m_Window)
+		{
+			glfwTerminate();
+			s_GLFWInitialized = false;
+		}
+	}
 
-	void Window::OnUpdate()
+	inline std::pair<float, float> Window::GetWindowPos() const
+	{
+		int x, y;
+		glfwGetWindowPos(m_Window, &x, &y);
+		return { x, y };
+	}
+
+	void Window::ProcessEvents()
 	{
 		glfwPollEvents();
+	}
+
+	void Window::SwapBuffers()
+	{
 		glfwSwapBuffers(m_Window);
 
 		ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
@@ -180,32 +230,39 @@ namespace Zenith {
 		m_LastFrameTime = time;
 	}
 
-	inline std::pair<float, float> Window::GetWindowPos() const
-	{
-		int x, y;
-		glfwGetWindowPos(m_Window, &x, &y);
-		return { x, y };
-	}
-
 	void Window::SetVSync(bool enabled)
 	{
+		m_Specification.VSync = enabled;
 		glfwSwapInterval(enabled ? 1 : 0);
-		m_Data.VSync = enabled;
+	}
+
+	bool Window::IsVSync() const
+	{
+		return m_Specification.VSync;
+	}
+
+	void Window::SetResizable(bool resizable) const
+	{
+		glfwSetWindowAttrib(m_Window, GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
+	}
+
+	void Window::Maximize()
+	{
+		glfwMaximizeWindow(m_Window);
+	}
+
+	void Window::CenterWindow()
+	{
+		const GLFWvidmode* videmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		int x = (videmode->width / 2) - (m_Data.Width / 2);
+		int y = (videmode->height / 2) - (m_Data.Height / 2);
+		glfwSetWindowPos(m_Window, x, y);
 	}
 
 	void Window::SetTitle(const std::string& title)
 	{
 		m_Data.Title = title;
 		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
-	}
-
-	void Window::Shutdown()
-	{
-		if (m_Window)
-		{
-			glfwDestroyWindow(m_Window);
-			m_Window = nullptr;
-		}
 	}
 
 }

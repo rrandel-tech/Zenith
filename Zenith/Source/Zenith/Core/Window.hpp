@@ -9,17 +9,14 @@
 
 namespace Zenith {
 
-	struct WindowProps
+	struct WindowSpecification
 	{
-		std::string Title;
-		uint32_t Width;
-		uint32_t Height;
-
-		WindowProps(const std::string& title = "Zenith Engine",
-			uint32_t width = 1280,
-			uint32_t height = 720)
-			: Title(title), Width(width), Height(height)
-		{}
+		std::string Title = "Zenith";
+		uint32_t Width = 1600;
+		uint32_t Height = 900;
+		bool Decorated = true;
+		bool Fullscreen = false;
+		bool VSync = true;
 	};
 
 	class Window : public RefCounted
@@ -27,40 +24,48 @@ namespace Zenith {
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
 
-		static Window* Create(const WindowProps& props = WindowProps());
+		Window(const WindowSpecification& specification);
+		virtual ~Window();
 
-		explicit Window(const WindowProps& props);
-		~Window();
+		virtual void Init();
+		virtual void ProcessEvents();
+		virtual void SwapBuffers();
 
-		void Init(const WindowProps& props);
-		void OnUpdate();
 		void RegisterGLFWCallbacks();
-		void Shutdown();
 
-		[[nodiscard]] uint32_t GetWidth() const { return m_Data.Width; }
-		[[nodiscard]] uint32_t GetHeight() const { return m_Data.Height; }
-		[[nodiscard]] std::pair<uint32_t, uint32_t> GetSize() const { return { m_Data.Width, m_Data.Height }; }
-		[[nodiscard]] std::pair<float, float> GetWindowPos() const;
-		[[nodiscard]] bool IsVSync() const { return m_Data.VSync; }
-		[[nodiscard]] void* GetNativeWindow() const { return m_Window; }
+		inline uint32_t GetWidth() const { return m_Data.Width; }
+		inline uint32_t GetHeight() const { return m_Data.Height; }
 
-		std::string& GetTitle() const;
-		void SetTitle(const std::string& title);
+		virtual std::pair<uint32_t, uint32_t> GetSize() const { return { m_Data.Width, m_Data.Height }; }
+		virtual std::pair<float, float> GetWindowPos() const;
 
-		void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
-		void SetVSync(bool enabled);
+		virtual void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
+		virtual void SetVSync(bool enabled);
+		virtual bool IsVSync() const;
+		virtual void SetResizable(bool resizable) const;
 
+		virtual void Maximize();
+		virtual void CenterWindow();
+
+		virtual const std::string& GetTitle() const { return m_Data.Title; }
+		virtual void SetTitle(const std::string& title);
+
+		inline void* GetNativeWindow() const { return m_Window; }
+	public:
+		static Window* Create(const WindowSpecification& specification = WindowSpecification());
 	private:
+		virtual void Shutdown();
+	private:
+		GLFWwindow* m_Window = nullptr;
+		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
+		WindowSpecification m_Specification;
 		struct WindowData
 		{
 			std::string Title;
-			uint32_t Width = 0, Height = 0;
-			bool VSync = true;
+			uint32_t Width, Height;
+
 			EventCallbackFn EventCallback;
 		};
-
-		GLFWwindow* m_Window = nullptr;
-		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
 
 		WindowData m_Data;
 		float m_LastFrameTime = 0.0f;

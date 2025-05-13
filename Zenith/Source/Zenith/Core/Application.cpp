@@ -4,29 +4,43 @@
 #include "Zenith/Renderer/Renderer.hpp"
 #include "Zenith/Renderer/Framebuffer.hpp"
 
-#include "FatalSignal.hpp"
-
 #include <GLFW/glfw3.h>
-
 #include <imgui/imgui.h>
+
+#include "FatalSignal.hpp"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <Windows.h>
 
+extern bool g_ApplicationRunning;
 namespace Zenith {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const ApplicationProps& props)
+	Application::Application(const ApplicationSpecification& specification)
+		: m_Specification(specification)
 	{
 		FatalSignal::Install();
 
 		s_Instance = this;
 
-		m_Window = std::unique_ptr<Window>(Window::Create({ props.Name, props.WindowWidth, props.WindowHeight }));
+		WindowSpecification windowSpec;
+		windowSpec.Title = specification.Name;
+		windowSpec.Width = specification.WindowWidth;
+		windowSpec.Height = specification.WindowHeight;
+		windowSpec.Decorated = specification.WindowDecorated;
+		windowSpec.Fullscreen = specification.Fullscreen;
+		windowSpec.VSync = specification.VSync;
+		m_Window = std::unique_ptr<Window>(Window::Create(windowSpec));
+		m_Window->Init();
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
-		m_Window->SetVSync(true);
+
+		if (specification.StartMaximized)
+			m_Window->Maximize();
+		else
+			m_Window->CenterWindow();
+		m_Window->SetResizable(specification.Resizable);
 
 		m_ImGuiLayer = new ImGuiLayer("ImGui");
 		PushOverlay(m_ImGuiLayer);
@@ -82,8 +96,8 @@ namespace Zenith {
 		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
 		ImGui::End();
 
-		for (Layer* layer : m_LayerStack)
-			layer->OnImGuiRender();
+		for (int i = 0; i < m_LayerStack.Size(); i++)
+			m_LayerStack[i]->OnImGuiRender();
 
 		m_ImGuiLayer->End();
 	}
@@ -93,6 +107,8 @@ namespace Zenith {
 		OnInit();
 		while (m_Running)
 		{
+			ProcessEvents();
+
 			if (!m_Minimized)
 			{
 				for (Layer* layer : m_LayerStack)
@@ -104,19 +120,37 @@ namespace Zenith {
 
 				Renderer::WaitAndRender();
 			}
-			m_Window->OnUpdate();
+			m_Window->SwapBuffers();
 
 			float time = GetTime();
-			m_TimeStep = time - m_LastFrameTime;
+			m_Frametime = time - m_LastFrameTime;
+			m_TimeStep = glm::min<float>(m_Frametime, 0.0333f);
 			m_LastFrameTime = time;
 		}
 		OnShutdown();
+	}
+
+	void Application::Close()
+	{
+		m_Running = false;
+	}
+
+	void Application::OnShutdown()
+	{
+		m_EventCallbacks.clear();
+		g_ApplicationRunning = false;
+	}
+
+	void Application::ProcessEvents()
+	{
+		m_Window->ProcessEvents();
 	}
 
 	void Application::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
+		dispatcher.Dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return OnWindowMinimize(e); });
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
 
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
@@ -128,17 +162,25 @@ namespace Zenith {
 
 		if (event.Handled)
 			return;
+
+		for (auto& eventCallback : m_EventCallbacks)
+		{
+			eventCallback(event);
+
+			if (event.Handled)
+				break;
+		}
 	}
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		int width = e.GetWidth(), height = e.GetHeight();
+		const uint32_t width = e.GetWidth(), height = e.GetHeight();
 		if (width == 0 || height == 0)
 		{
-			m_Minimized = true;
+			// m_Minimized = true;
 			return false;
 		}
-		m_Minimized = false;
+		// m_Minimized = false;
 		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)
@@ -147,10 +189,31 @@ namespace Zenith {
 		return false;
 	}
 
-	bool Application::OnWindowClose(WindowCloseEvent&)
+	bool Application::OnWindowMinimize(WindowMinimizeEvent& e)
 	{
-		m_Running = false;
+		m_Minimized = e.IsMinimized();
+		return false;
+	}
+
+	bool Application::OnWindowClose(WindowCloseEvent& e)
+	{
+		Close();
 		return true;
+	}
+
+	float Application::GetTime() const
+	{
+		return (float)glfwGetTime();
+	}
+
+	const char* Application::GetConfigurationName()
+	{
+		return ZN_BUILD_CONFIG_NAME;
+	}
+
+	const char* Application::GetPlatformName()
+	{
+		return ZN_BUILD_PLATFORM_NAME;
 	}
 
 	std::string Application::OpenFile(const char* filter) const
@@ -195,33 +258,6 @@ namespace Zenith {
 			return ofn.lpstrFile;
 		}
 		return std::string();
-	}
-
-	float Application::GetTime() const
-	{
-		return (float)glfwGetTime();
-	}
-
-	const char* Application::GetConfigurationName()
-	{
-#if defined(ZN_DEBUG)
-		return "Debug";
-#elif defined(ZN_RELEASE)
-		return "Release";
-#elif defined(ZN_DIST)
-		return "Dist";
-#else
-#error Undefined configuration?
-#endif
-	}
-
-	const char* Application::GetPlatformName()
-	{
-#if defined(ZN_PLATFORM_WINDOWS)
-		return "Windows x64";
-#else
-#error Undefined platform?
-#endif
 	}
 
 }

@@ -5,7 +5,7 @@
 
 namespace Zenith
 {
-	void IntializeCore();
+	void InitializeCore();
 	void ShutdownCore();
 };
 

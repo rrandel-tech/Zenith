@@ -6,8 +6,8 @@
 class ZenithEditorApplication : public Zenith::Application
 {
 public:
-	ZenithEditorApplication(const Zenith::ApplicationProps& props)
-		: Application(props)
+	ZenithEditorApplication(const Zenith::ApplicationSpecification& specification)
+		: Application(specification)
 	{}
 
 	virtual void OnInit() override
@@ -18,5 +18,13 @@ public:
 
 Zenith::Application* Zenith::CreateApplication(int argv, char** argc)
 {
-	return new ZenithEditorApplication({ "ZenithEditor", 1600, 900 });
+	Zenith::ApplicationSpecification specification;
+	specification.Name = "Zenit-Editor";
+	specification.WindowWidth = 1600;
+	specification.WindowHeight = 900;
+	specification.WindowDecorated = true;
+	specification.StartMaximized = true;
+	specification.VSync = true;
+
+	return new ZenithEditorApplication(specification);
 }

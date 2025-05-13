@@ -542,6 +542,16 @@ namespace Zenith {
 
 		ImGui::Separator();
 
+		Application& app = Application::Get();
+		bool vsync = app.GetWindow().IsVSync();
+		bool changed = ImGui::Checkbox("##Vsync", &vsync);
+		ImGui::SameLine();
+		ImGui::TextUnformatted("VSync");
+		if (changed)
+			app.GetWindow().SetVSync(vsync);
+
+		ImGui::Separator();
+
 		if (ImGui::TreeNode("Shaders"))
 		{
 			auto& shaders = Shader::s_AllShaders;
