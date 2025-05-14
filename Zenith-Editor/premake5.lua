@@ -66,6 +66,8 @@ project "Zenith-Editor"
 
 	filter "configurations:Debug or configurations:Debug-AS or configurations:Release"
 		defines {
+			"ZN_TRACK_MEMORY",
+
 			"JPH_DEBUG_RENDERER",
 			"JPH_FLOATING_POINT_EXCEPTIONS_ENABLED",
 			"JPH_EXTERNAL_PROFILE"

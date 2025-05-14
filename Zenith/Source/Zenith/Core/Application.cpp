@@ -44,7 +44,7 @@ namespace Zenith {
 
 		if (m_Specification.EnableImGui)
 		{
-			m_ImGuiLayer = new ImGuiLayer("ImGui");
+			m_ImGuiLayer = znew ImGuiLayer("ImGui");
 			PushOverlay(m_ImGuiLayer);
 		}
 

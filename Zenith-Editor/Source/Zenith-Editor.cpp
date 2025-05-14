@@ -12,7 +12,7 @@ public:
 
 	virtual void OnInit() override
 	{
-		PushLayer(new Zenith::EditorLayer());
+		PushLayer(znew Zenith::EditorLayer());
 	}
 };
 
@@ -26,5 +26,5 @@ Zenith::Application* Zenith::CreateApplication(int argv, char** argc)
 	specification.StartMaximized = true;
 	specification.VSync = true;
 
-	return new ZenithEditorApplication(specification);
+	return znew ZenithEditorApplication(specification);
 }

@@ -9,7 +9,7 @@ namespace Zenith {
 		switch (RendererAPI::Current())
 		{
 			case RendererAPIType::None:    return nullptr;
-			case RendererAPIType::OpenGL:  return new OpenGLVertexBuffer(size);
+			case RendererAPIType::OpenGL:  return znew OpenGLVertexBuffer(size);
 		}
 		return nullptr;
 

@@ -22,16 +22,16 @@ namespace Zenith {
 
 	void Renderer::Init()
 	{
-		s_CommandQueue[0] = new RenderCommandQueue();
-		s_CommandQueue[1] = new RenderCommandQueue();
+		s_CommandQueue[0] = znew RenderCommandQueue();
+		s_CommandQueue[1] = znew RenderCommandQueue();
 
 		Renderer::Submit([]() { RendererAPI::Init(); });
 	}
 
 	void Renderer::Shutdown()
 	{
-		delete s_CommandQueue[0];
-		delete s_CommandQueue[1];
+		zdelete s_CommandQueue[0];
+		zdelete s_CommandQueue[1];
 	}
 
 	void Renderer::Clear()

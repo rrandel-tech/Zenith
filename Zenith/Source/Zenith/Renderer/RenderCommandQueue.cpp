@@ -7,14 +7,14 @@ namespace Zenith {
 
 	RenderCommandQueue::RenderCommandQueue()
 	{
-		m_CommandBuffer = new uint8_t[10 * 1024 * 1024]; // 10mb buffer
+		m_CommandBuffer = znew uint8_t[10 * 1024 * 1024]; // 10mb buffer
 		m_CommandBufferPtr = m_CommandBuffer;
 		memset(m_CommandBuffer, 0, 10 * 1024 * 1024);
 	}
 
 	RenderCommandQueue::~RenderCommandQueue()
 	{
-		delete[] m_CommandBuffer;
+		zdelete[] m_CommandBuffer;
 	}
 
 	void* RenderCommandQueue::Allocate(RenderCommandFn fn, uint32_t size)

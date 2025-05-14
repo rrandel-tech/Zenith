@@ -1,6 +1,5 @@
 #pragma once
 
-#include "znpch.hpp"
 #include "Zenith/Core/Layer.hpp"
 
 namespace Zenith {
@@ -9,7 +8,7 @@ namespace Zenith {
 	{
 	public:
 		ImGuiLayer();
-		explicit ImGuiLayer(const std::string& name);
+		ImGuiLayer(const std::string& name);
 		~ImGuiLayer() override;
 
 		void Begin();

@@ -60,6 +60,8 @@
 #include <Zenith/Core/Base.hpp>
 #include <Zenith/Core/Assert.hpp>
 #include <Zenith/Core/Events/Event.hpp>
+#include <Zenith/Core/Math/Mat4.hpp>
+#include <Zenith/Core/Memory.hpp>
 #include <Zenith/Core/Log.hpp>
 
 // Jolt (Safety because this file has to be included before all other Jolt headers, at all times)

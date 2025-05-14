@@ -10,7 +10,7 @@ namespace Zenith {
 		switch (RendererAPI::Current())
 		{
 			case RendererAPIType::None:    return nullptr;
-			case RendererAPIType::OpenGL:  return new OpenGLIndexBuffer(size);
+			case RendererAPIType::OpenGL:  return znew OpenGLIndexBuffer(size);
 		}
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
