@@ -28,6 +28,8 @@ namespace Zenith {
 	{
 		FatalSignal::Install();
 
+		m_RenderDoc.Initialize();
+
 		s_Instance = this;
 
 		if (!specification.WorkingDirectory.empty())
@@ -153,6 +155,11 @@ namespace Zenith {
 				}
 
 				Renderer::WaitAndRender();
+
+				m_RenderDoc.SetCaptureName("Startup");
+
+				int keys[1] = { GLFW_KEY_C };
+				m_RenderDoc.SetCaptureKeys(keys, 1);
 				
 				//TODO: This should be in the render thread
 				Renderer::SwapQueues();

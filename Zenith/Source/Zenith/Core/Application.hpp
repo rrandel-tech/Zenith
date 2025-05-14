@@ -6,6 +6,8 @@
 #include "Zenith/Core/Window.hpp"
 #include "Zenith/Core/LayerStack.hpp"
 
+#include "Zenith/Debug/RenderDoc.hpp"
+
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
 
 #include "Zenith/ImGui/ImGuiLayer.hpp"
@@ -80,6 +82,7 @@ namespace Zenith {
 		ImGuiLayer* m_ImGuiLayer;
 		Timestep m_Frametime;
 		Timestep m_TimeStep;
+		RenderDoc m_RenderDoc;
 		PerformanceProfiler* m_Profiler = nullptr; // TODO: Should be null in Dist
 		bool m_ShowStats = true;
 
