@@ -7,12 +7,13 @@
 #include "Zenith/Core/Events/MouseEvent.hpp"
 
 #include <imgui.h>
+#include "stb_image.h"
 
 namespace Zenith {
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
-		ZN_CORE_ERROR("GLFW Erorr ({0}): {1}", error, description);
+		ZN_CORE_ERROR_TAG("GLFW", "GLFW Erorr ({0}): {1}", error, description);
 	}
 
 	static bool s_GLFWInitialized = false;
@@ -38,7 +39,7 @@ namespace Zenith {
 		m_Data.Width = m_Specification.Width;
 		m_Data.Height = m_Specification.Height;
 
-		ZN_CORE_INFO("Creating window {0} ({1}, {2})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
+		ZN_CORE_INFO_TAG("GLFW", "Creating window {0} ({1}, {2})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
 
 		if (!s_GLFWInitialized)
 		{
@@ -77,6 +78,31 @@ namespace Zenith {
 		else
 		{
 			m_Window = glfwCreateWindow((int)m_Specification.Width, (int)m_Specification.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		}
+
+		// Set icon
+		{
+			GLFWimage icon;
+			int channels;
+
+			if (!m_Specification.IconPath.empty())
+			{
+				std::string iconPathStr = m_Specification.IconPath.string();
+				icon.pixels = stbi_load(iconPathStr.c_str(), &icon.width, &icon.height, &channels, 4);
+				if (icon.pixels)
+				{
+					glfwSetWindowIcon(m_Window, 1, &icon);
+					stbi_image_free(icon.pixels);
+				}
+				else
+				{
+					ZN_CORE_WARN("Failed to load window icon from path: {}", iconPathStr);
+				}
+			}
+			else
+			{
+				ZN_CORE_WARN("No window icon path provided, skipping icon setup.");
+			}
 		}
 
 		glfwMakeContextCurrent(m_Window);

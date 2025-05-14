@@ -4,6 +4,7 @@
 #include "Zenith/Core/Events/Event.hpp"
 
 #include <functional>
+#include <filesystem>
 
 #include <GLFW/glfw3.h>
 
@@ -17,6 +18,7 @@ namespace Zenith {
 		bool Decorated = true;
 		bool Fullscreen = false;
 		bool VSync = true;
+		std::filesystem::path IconPath;
 	};
 
 	class Window : public RefCounted

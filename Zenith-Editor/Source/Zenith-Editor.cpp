@@ -25,6 +25,7 @@ Zenith::Application* Zenith::CreateApplication(int argv, char** argc)
 	specification.WindowDecorated = true;
 	specification.StartMaximized = true;
 	specification.VSync = true;
+	specification.IconPath = "Resources/Editor/Zenith.png";
 
 	return znew ZenithEditorApplication(specification);
 }

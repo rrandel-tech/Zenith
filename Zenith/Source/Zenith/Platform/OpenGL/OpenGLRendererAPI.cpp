@@ -10,17 +10,17 @@ namespace Zenith {
 		switch (severity)
 		{
 			case GL_DEBUG_SEVERITY_HIGH:
-				ZN_CORE_ERROR("[OpenGL Debug HIGH] {0}", message);
+				ZN_CORE_ERROR_TAG("Renderer", "[OpenGL Debug HIGH] {0}", message);
 				ZN_CORE_ASSERT(false, "GL_DEBUG_SEVERITY_HIGH");
 				break;
 			case GL_DEBUG_SEVERITY_MEDIUM:
-				ZN_CORE_WARN("[OpenGL Debug MEDIUM] {0}", message);
+				ZN_CORE_ERROR_TAG("Renderer", "[OpenGL Debug MEDIUM] {0}", message);
 				break;
 			case GL_DEBUG_SEVERITY_LOW:
-				ZN_CORE_INFO("[OpenGL Debug LOW] {0}", message);
+				ZN_CORE_ERROR_TAG("Renderer", "[OpenGL Debug LOW] {0}", message);
 				break;
 			case GL_DEBUG_SEVERITY_NOTIFICATION:
-				ZN_CORE_TRACE("[OpenGL Debug NOTIFICATION] {0}", message);
+				ZN_CORE_ERROR_TAG("Renderer", "[OpenGL Debug NOTIFICATION] {0}", message);
 				break;
 		}
 	}
@@ -47,7 +47,7 @@ namespace Zenith {
 		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &caps.MaxTextureUnits);
 
 		for (GLenum error = glGetError(); error != GL_NO_ERROR; error = glGetError())
-			ZN_CORE_ERROR("OpenGL Error on Init: 0x{:X}", error);
+			ZN_CORE_ERROR_TAG("Renderer", "OpenGL Error on Init: 0x{:X}", error);
 	}
 
 	void RendererAPI::Shutdown()

@@ -4,6 +4,7 @@
 !Zenith/vendor/assimp/bin
 bin-int/
 obj/
+Zenith/vendor/VulkanSDK
 Intermediates/
 Binaries
 __pycache__
@@ -24,3 +25,9 @@ Makefile
 # LFS Folders
 lfs/
 hooks/
+
+# Log files
+**.log
+
+# Zenith-Editor Folders
+Zenith-Editor/Captures/

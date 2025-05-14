@@ -65,7 +65,7 @@ namespace Zenith {
 
 			ZN_ASSERT(m_API && "RenderDoc: API pointer is null after RENDERDOC_GetAPI");
 			m_IsInitialized = true;
-			ZN_CORE_INFO("RenderDoc initialized successfully.");
+			ZN_CORE_ERROR("RenderDoc initialized successfully.");
 			return true;
 		}
 

@@ -8,10 +8,16 @@
 
 #include "FatalSignal.hpp"
 
+#include "imgui/imgui_internal.h"
+
+#include <Zenith/Debug/Profiler.hpp>
+
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <Windows.h>
 #include <glm/common.hpp>
+
+#include "Memory.hpp"
 
 extern bool g_ApplicationRunning;
 namespace Zenith {
@@ -25,6 +31,8 @@ namespace Zenith {
 
 		s_Instance = this;
 
+		m_Profiler = znew PerformanceProfiler();
+
 		WindowSpecification windowSpec;
 		windowSpec.Title = specification.Name;
 		windowSpec.Width = specification.WindowWidth;
@@ -32,6 +40,7 @@ namespace Zenith {
 		windowSpec.Decorated = specification.WindowDecorated;
 		windowSpec.Fullscreen = specification.Fullscreen;
 		windowSpec.VSync = specification.VSync;
+		windowSpec.IconPath = specification.IconPath;
 		m_Window = std::unique_ptr<Window>(Window::Create(windowSpec));
 		m_Window->Init();
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
@@ -61,6 +70,9 @@ namespace Zenith {
 			layer->OnDetach();
 			delete layer;
 		}
+
+		delete m_Profiler;
+		m_Profiler = nullptr;
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -89,6 +101,9 @@ namespace Zenith {
 
 	void Application::RenderImGui()
 	{
+		ZN_PROFILE_FUNC();
+		ZN_SCOPE_PERF("Application::RenderImGui");
+
 		m_ImGuiLayer->Begin();
 
 		ImGui::Begin("Renderer");
@@ -106,8 +121,6 @@ namespace Zenith {
 
 		for (int i = 0; i < m_LayerStack.Size(); i++)
 			m_LayerStack[i]->OnImGuiRender();
-
-		m_ImGuiLayer->End();
 	}
 
 	void Application::Run()
@@ -117,8 +130,11 @@ namespace Zenith {
 		{
 			ProcessEvents();
 
+			m_Profiler->Clear();
+
 			if (!m_Minimized)
 			{
+				ZN_SCOPE_PERF("Application Layer::OnUpdate");
 				for (Layer* layer : m_LayerStack)
 					layer->OnUpdate(m_TimeStep);
 
@@ -127,6 +143,7 @@ namespace Zenith {
 				if (m_Specification.EnableImGui)
 				{
 					Renderer::Submit([app]() { app->RenderImGui(); });
+					Renderer::Submit([=]() { m_ImGuiLayer->End(); });
 				}
 
 				Renderer::WaitAndRender();
@@ -140,6 +157,8 @@ namespace Zenith {
 			m_Frametime = time - m_LastFrameTime;
 			m_TimeStep = glm::min<float>(m_Frametime, 0.0333f);
 			m_LastFrameTime = time;
+
+			ZN_PROFILE_MARK_FRAME;
 		}
 		OnShutdown();
 	}
@@ -188,6 +207,12 @@ namespace Zenith {
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		const uint32_t width = e.GetWidth(), height = e.GetHeight();
+		if (width == 0 || height == 0)
+		{
+			return false;
+		}
+
 		return false;
 	}
 
@@ -200,7 +225,7 @@ namespace Zenith {
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		Close();
-		return true;
+		return false;
 	}
 
 	float Application::GetTime() const

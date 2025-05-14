@@ -2,6 +2,7 @@
 
 #include "Zenith/Core/Base.hpp"
 #include "Zenith/Core/TimeStep.hpp"
+#include "Zenith/Core/Timer.hpp"
 #include "Zenith/Core/Window.hpp"
 #include "Zenith/Core/LayerStack.hpp"
 
@@ -21,6 +22,7 @@ namespace Zenith {
 		bool StartMaximized = true;
 		bool Resizable = true;
 		bool EnableImGui = true;
+		std::filesystem::path IconPath;
 	};
 
 	class Application
@@ -47,6 +49,8 @@ namespace Zenith {
 
 		void AddEventCallback(const EventCallbackFn& eventCallback) { m_EventCallbacks.push_back(eventCallback); }
 
+		void SetShowStats(bool show) { m_ShowStats = show; }
+
 		std::string OpenFile(const char* filter = "All\0*.*\0") const;
 		std::string SaveFile(const char* filter = "All\0*.*\0") const;
 
@@ -62,6 +66,8 @@ namespace Zenith {
 		static const char* GetPlatformName();
 
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+
+		PerformanceProfiler* GetPerformanceProfiler() { return m_Profiler; }
 	private:
 		void ProcessEvents();
 
@@ -76,6 +82,8 @@ namespace Zenith {
 		ImGuiLayer* m_ImGuiLayer;
 		Timestep m_Frametime;
 		Timestep m_TimeStep;
+		PerformanceProfiler* m_Profiler = nullptr; // TODO: Should be null in Dist
+		bool m_ShowStats = true;
 
 		std::vector<EventCallbackFn> m_EventCallbacks;
 
