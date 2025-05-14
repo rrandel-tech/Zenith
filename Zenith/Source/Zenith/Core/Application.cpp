@@ -2,7 +2,6 @@
 #include "Application.hpp"
 
 #include "Zenith/Renderer/Renderer.hpp"
-#include "Zenith/Renderer/Framebuffer.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
@@ -12,6 +11,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <Windows.h>
+#include <glm/common.hpp>
 
 extern bool g_ApplicationRunning;
 namespace Zenith {
@@ -42,8 +42,11 @@ namespace Zenith {
 			m_Window->CenterWindow();
 		m_Window->SetResizable(specification.Resizable);
 
-		m_ImGuiLayer = new ImGuiLayer("ImGui");
-		PushOverlay(m_ImGuiLayer);
+		if (m_Specification.EnableImGui)
+		{
+			m_ImGuiLayer = new ImGuiLayer("ImGui");
+			PushOverlay(m_ImGuiLayer);
+		}
 
 		Renderer::Init();
 		Renderer::WaitAndRender();
@@ -93,6 +96,11 @@ namespace Zenith {
 		ImGui::Text("Vendor: %s", caps.Vendor.c_str());
 		ImGui::Text("Renderer: %s", caps.Renderer.c_str());
 		ImGui::Text("Version: %s", caps.Version.c_str());
+		ImGui::Separator();
+		ImGui::Text("Max Samples: %d", caps.MaxSamples);
+		ImGui::Text("Max Anisotropy: %.1f", caps.MaxAnisotropy);
+		ImGui::Text("Max Texture Units: %d", caps.MaxTextureUnits);
+		ImGui::Separator();
 		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
 		ImGui::End();
 
@@ -116,9 +124,15 @@ namespace Zenith {
 
 				// Render ImGui on render thread
 				Application* app = this;
-				Renderer::Submit([app]() { app->RenderImGui(); });
+				if (m_Specification.EnableImGui)
+				{
+					Renderer::Submit([app]() { app->RenderImGui(); });
+				}
 
 				Renderer::WaitAndRender();
+				
+				//TODO: This should be in the render thread
+				Renderer::SwapQueues();
 			}
 			m_Window->SwapBuffers();
 
@@ -174,18 +188,6 @@ namespace Zenith {
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
-		const uint32_t width = e.GetWidth(), height = e.GetHeight();
-		if (width == 0 || height == 0)
-		{
-			// m_Minimized = true;
-			return false;
-		}
-		// m_Minimized = false;
-		Renderer::Submit([=]() { glViewport(0, 0, width, height); });
-		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
-		for (auto& fb : fbs)
-			fb->Resize(width, height);
-
 		return false;
 	}
 

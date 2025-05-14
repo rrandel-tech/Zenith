@@ -26,15 +26,15 @@
 
 #include "znpch.hpp"
 
+#include "Zenith/Core/Input.hpp"
+#include "Zenith/Core/KeyCodes.hpp"
+
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "ImGuizmo.h"
-
-#include "Zenith/Core/Input.hpp"
-#include "Zenith/Core/KeyCodes.hpp"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -52,7 +52,7 @@ namespace IMGUIZMO_NAMESPACE
 	static const float ZPI = 3.14159265358979323846f;
 	static const float RAD2DEG = (180.f / ZPI);
 	static const float DEG2RAD = (ZPI / 180.f);
-	const float screenRotateSize = 0.06f;
+	const float screenRotateSize = 0.04f;
 	// scale a bit so translate axis do not touch when in universal
 	const float rotationDisplayFactor = 1.2f;
 
@@ -1600,7 +1600,7 @@ namespace IMGUIZMO_NAMESPACE
 					dir /= d; // Normalize
 					dir *= gContext.mStyle.TranslationLineArrowSize;
 
-					ImVec2 ortogonalDir(dir.y, -dir.x); // Perpendicular vector
+					ImVec2 ortogonalDir(dir.y * 0.8f, -dir.x * 0.8f); // Perpendicular vector
 					ImVec2 a(worldDirSSpace + dir);
 					drawList->AddTriangleFilled(worldDirSSpace - dir, a + ortogonalDir, a - ortogonalDir, colors[i + 1]);
 					// Arrow head end

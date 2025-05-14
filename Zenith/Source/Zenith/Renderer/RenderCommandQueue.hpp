@@ -1,7 +1,5 @@
 #pragma once
 
-#include "znpch.hpp"
-
 namespace Zenith {
 
 	class RenderCommandQueue
@@ -20,7 +18,5 @@ namespace Zenith {
 		uint8_t* m_CommandBufferPtr;
 		uint32_t m_CommandCount = 0;
 	};
-
-
 
 }

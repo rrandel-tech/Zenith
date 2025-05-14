@@ -10,12 +10,6 @@ namespace Zenith {
 		OpenGL
 	};
 
-	// TODO: move into separate header
-	enum class PrimitiveType
-	{
-		None = 0, Triangles, Lines
-	};
-
 	struct RenderAPICapabilities
 	{
 		std::string Vendor;
@@ -29,17 +23,13 @@ namespace Zenith {
 
 	class RendererAPI
 	{
-	private:
-
 	public:
 		static void Init();
 		static void Shutdown();
 
 		static void Clear(float r, float g, float b, float a);
-		static void SetClearColor(float r, float g, float b, float a);
 
-		static void DrawIndexed(uint32_t count, PrimitiveType type, bool depthTest = true);
-		static void SetLineThickness(float thickness);
+		static void DrawIndexed(uint32_t count);
 
 		static RenderAPICapabilities& GetCapabilities()
 		{
@@ -49,8 +39,6 @@ namespace Zenith {
 
 		static RendererAPIType Current() { return s_CurrentRendererAPI; }
 		static void SetAPI(RendererAPIType api);
-	private:
-		static void LoadRequiredAssets();
 	private:
 		inline static RendererAPIType s_CurrentRendererAPI = RendererAPIType::OpenGL;
 	};

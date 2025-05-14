@@ -19,15 +19,14 @@ namespace Zenith {
 
 	void* RenderCommandQueue::Allocate(RenderCommandFn fn, uint32_t size)
 	{
-		// TODO: alignment
 		*(RenderCommandFn*)m_CommandBufferPtr = fn;
-		m_CommandBufferPtr += sizeof(RenderCommandFn);
+		m_CommandBufferPtr += alignof(RenderCommandFn);
 
 		*(uint32_t*)m_CommandBufferPtr = size;
-		m_CommandBufferPtr += sizeof(uint32_t);
+		m_CommandBufferPtr += RoundUp(sizeof(uint32_t), alignof(RenderCommandFn));
 
 		void* memory = m_CommandBufferPtr;
-		m_CommandBufferPtr += size;
+		m_CommandBufferPtr += RoundUp<size_t>(size, alignof(RenderCommandFn));
 
 		m_CommandCount++;
 		return memory;
@@ -35,7 +34,7 @@ namespace Zenith {
 
 	void RenderCommandQueue::Execute()
 	{
-		//ZN_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", m_CommandCount, (m_CommandBufferPtr - m_CommandBuffer));
+		// ZN_RENDER_TRACE("RenderCommandQueue::Execute -- {0} commands, {1} bytes", m_CommandCount, (m_CommandBufferPtr - m_CommandBuffer));
 
 		byte* buffer = m_CommandBuffer;
 
@@ -45,9 +44,10 @@ namespace Zenith {
 			buffer += sizeof(RenderCommandFn);
 
 			uint32_t size = *(uint32_t*)buffer;
-			buffer += sizeof(uint32_t);
+			buffer += RoundUp(sizeof(uint32_t), alignof(RenderCommandFn));
+
 			function(buffer);
-			buffer += size;
+			buffer += RoundUp<size_t>(size, alignof(RenderCommandFn));
 		}
 
 		m_CommandBufferPtr = m_CommandBuffer;

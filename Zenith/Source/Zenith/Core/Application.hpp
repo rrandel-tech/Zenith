@@ -20,6 +20,7 @@ namespace Zenith {
 		bool VSync = true;
 		bool StartMaximized = true;
 		bool Resizable = true;
+		bool EnableImGui = true;
 	};
 
 	class Application

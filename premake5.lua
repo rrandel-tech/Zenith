@@ -1,3 +1,4 @@
+include "./vendor/premake_customization/solution_items.lua"
 include "Dependencies.lua"
 
 workspace "Zenith"
@@ -8,6 +9,8 @@ workspace "Zenith"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "Off"
+
+	solution_items { ".editorconfig" }
 
 	flags { "MultiProcessorCompile" }
 

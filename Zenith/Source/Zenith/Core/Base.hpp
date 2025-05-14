@@ -62,6 +62,12 @@ namespace Zenith
 namespace Zenith {
 
 	template<typename T>
+	T RoundDown(T x, T fac) { return x / fac * fac; }
+
+	template<typename T>
+	T RoundUp(T x, T fac) { return RoundDown(x + fac - 1, fac); }
+
+	template<typename T>
 	using Scope = std::unique_ptr<T>;
 	template<typename T, typename ... Args>
 	constexpr Scope<T> CreateScope(Args&& ... args)
