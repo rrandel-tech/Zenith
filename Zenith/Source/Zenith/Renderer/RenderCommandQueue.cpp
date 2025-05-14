@@ -14,7 +14,7 @@ namespace Zenith {
 
 	RenderCommandQueue::~RenderCommandQueue()
 	{
-		zdelete[] m_CommandBuffer;
+		delete[] m_CommandBuffer;
 	}
 
 	void* RenderCommandQueue::Allocate(RenderCommandFn fn, uint32_t size)

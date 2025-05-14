@@ -1,5 +1,15 @@
 #include "EditorLayer.hpp"
 
+#include "Zenith/Debug/Profiler.hpp"
+
+#include "Zenith/Utilities/FileSystem.hpp"
+
+#include <GLFW/include/GLFW/glfw3.h>
+
+#include <imgui/imgui_internal.h>
+
+#include <filesystem>
+
 namespace Zenith {
 
 	EditorLayer::EditorLayer() 
@@ -41,6 +51,8 @@ namespace Zenith {
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
+		ZN_PROFILE_FUNC();
+
 		Renderer::Clear(m_ClearColor[0], m_ClearColor[1], m_ClearColor[2], m_ClearColor[3]);
 
 		m_VB->Bind();
@@ -50,6 +62,8 @@ namespace Zenith {
 
 	void EditorLayer::OnImGuiRender()
 	{
+		ZN_PROFILE_FUNC();
+
 		ImGui::Begin("EditorLayer");
 		ImGui::ColorEdit4("Clear Color", m_ClearColor);
 
@@ -62,6 +76,20 @@ namespace Zenith {
 		ImGui::TextUnformatted("VSync");
 		if (changed)
 			app.GetWindow().SetVSync(vsync);
+
+		if (ImGui::Button("Open File Dialog"))
+		{
+			std::filesystem::path filePath = Zenith::FileSystem::OpenFileDialog({ {"All Files", "*.*"} });
+
+			if (!filePath.empty())
+			{
+				ZN_INFO("Selected file: {0}", filePath.string());
+			}
+			else
+			{
+				ZN_ERROR("No file selected.");
+			}
+		}
 		ImGui::End();
 	}
 

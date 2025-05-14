@@ -1,7 +1,7 @@
-#include <Zenith.hpp>
-#include <Zenith/EntryPoint.hpp>
-
 #include "EditorLayer.hpp"
+#include "Zenith/Utilities/FileSystem.hpp"
+
+#include "Zenith/EntryPoint.hpp"
 
 class ZenithEditorApplication : public Zenith::Application
 {
@@ -12,8 +12,29 @@ public:
 
 	virtual void OnInit() override
 	{
+		// Persistent Storage
+		{
+			m_PersistentStoragePath = Zenith::FileSystem::GetPersistentStoragePath() / "Zenith-Editor";
+
+			if (!Zenith::FileSystem::Exists(m_PersistentStoragePath))
+				Zenith::FileSystem::CreateDirectory(m_PersistentStoragePath);
+		}
+
+		// Update the ZENITH_DIR environment variable every time we launch
+		{
+			auto workingDirectory = Zenith::FileSystem::GetWorkingDirectory();
+
+			if (workingDirectory.stem().string() == "Zenith-Editor")
+				workingDirectory = workingDirectory.parent_path();
+
+			Zenith::FileSystem::SetEnvironmentVariable("ZENITH_DIR", workingDirectory.string());
+		}
+
 		PushLayer(znew Zenith::EditorLayer());
 	}
+
+private:
+	std::filesystem::path m_PersistentStoragePath;
 };
 
 Zenith::Application* Zenith::CreateApplication(int argv, char** argc)

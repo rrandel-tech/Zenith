@@ -110,8 +110,14 @@ namespace Zenith {
 
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ZN_CORE_ASSERT(status, "Failed to initialize Glad!");
-		//glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
+
+		bool isRawMouseMotionSupported = glfwRawMouseMotionSupported();
+		if (isRawMouseMotionSupported)
+			glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		else
+			ZN_CORE_WARN_TAG("Platform", "Raw mouse motion not supported.");
+
 
 		RegisterGLFWCallbacks();
 

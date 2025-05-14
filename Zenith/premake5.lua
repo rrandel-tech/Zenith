@@ -13,11 +13,17 @@ project "Zenith"
 		"Source/**.hpp",
 		"Source/**.cpp",
 
+		"Platform/" .. firstToUpper(os.target()) .. "/**.hpp",
+		"Platform/" .. firstToUpper(os.target()) .. "/**.cpp",
+
 		"vendor/FastNoise/**.cpp",
 
 		"vendor/yaml-cpp/src/**.cpp",
 		"vendor/yaml-cpp/src/**.h",
 		"vendor/yaml-cpp/include/**.h",
+
+		"vendor/VulkanMemoryAllocator/**.h",
+		"vendor/VulkanMemoryAllocator/**.cpp"
 	}
 
 	includedirs { "Source/", "vendor/" }

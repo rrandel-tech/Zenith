@@ -30,8 +30,8 @@ namespace Zenith {
 
 	void Renderer::Shutdown()
 	{
-		zdelete s_CommandQueue[0];
-		zdelete s_CommandQueue[1];
+		delete s_CommandQueue[0];
+		delete s_CommandQueue[1];
 	}
 
 	void Renderer::Clear()

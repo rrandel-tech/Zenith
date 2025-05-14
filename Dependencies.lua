@@ -81,6 +81,11 @@ Dependencies = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/backward-cpp"
 	},
 
+	NFDExtended = {
+		LibName = "NFD-Extended",
+		IncludeDir = "%{wks.location}/Zenith/vendor/NFD-Extended/NFD-Extended/src/include"
+	},
+
 	-- Asset Loading
 	Assimp = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/assimp/include",

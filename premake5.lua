@@ -58,6 +58,7 @@ include "Zenith/vendor/imgui"
 include "Zenith/vendor/Glad"
 include "Zenith/vendor/tracy"
 include "Zenith/vendor/JoltPhysics/JoltPhysicsPremake.lua"
+include "Zenith/vendor/NFD-Extended"
 group ""
 
 group "Core"

@@ -10,12 +10,11 @@
 
 #include "imgui/imgui_internal.h"
 
-#include <Zenith/Debug/Profiler.hpp>
+#include "Zenith/Utilities/StringUtils.hpp"
+#include "Zenith/Debug/Profiler.hpp"
 
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-#include <Windows.h>
-#include <glm/common.hpp>
+#include <filesystem>
+#include <nfd.hpp>
 
 #include "Memory.hpp"
 
@@ -31,6 +30,9 @@ namespace Zenith {
 
 		s_Instance = this;
 
+		if (!specification.WorkingDirectory.empty())
+			std::filesystem::current_path(specification.WorkingDirectory);
+
 		m_Profiler = znew PerformanceProfiler();
 
 		WindowSpecification windowSpec;
@@ -44,6 +46,8 @@ namespace Zenith {
 		m_Window = std::unique_ptr<Window>(Window::Create(windowSpec));
 		m_Window->Init();
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
+
+		ZN_CORE_VERIFY(NFD::Init() == NFD_OKAY);
 
 		if (specification.StartMaximized)
 			m_Window->Maximize();
@@ -63,6 +67,8 @@ namespace Zenith {
 
 	Application::~Application()
 	{
+		NFD::Quit();
+
 		m_Window->SetEventCallback([](Event& e) {});
 
 		for (Layer* layer : m_LayerStack)
@@ -241,50 +247,6 @@ namespace Zenith {
 	const char* Application::GetPlatformName()
 	{
 		return ZN_BUILD_PLATFORM_NAME;
-	}
-
-	std::string Application::OpenFile(const char* filter) const
-	{
-		OPENFILENAMEA ofn;       // common dialog box structure
-		CHAR szFile[260] = { 0 };       // if using TCHAR macros
-
-		// Initialize OPENFILENAME
-		ZeroMemory(&ofn, sizeof(OPENFILENAME));
-		ofn.lStructSize = sizeof(OPENFILENAME);
-		ofn.hwndOwner = glfwGetWin32Window((GLFWwindow*)m_Window->GetNativeWindow());
-		ofn.lpstrFile = szFile;
-		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = filter;
-		ofn.nFilterIndex = 1;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-		if (GetOpenFileNameA(&ofn) == TRUE)
-		{
-			return ofn.lpstrFile;
-		}
-		return std::string();
-	}
-
-	std::string Application::SaveFile(const char* filter) const
-	{
-		OPENFILENAMEA ofn;       // common dialog box structure
-		CHAR szFile[260] = { 0 };       // if using TCHAR macros
-
-		// Initialize OPENFILENAME
-		ZeroMemory(&ofn, sizeof(OPENFILENAME));
-		ofn.lStructSize = sizeof(OPENFILENAME);
-		ofn.hwndOwner = glfwGetWin32Window((GLFWwindow*)m_Window->GetNativeWindow());
-		ofn.lpstrFile = szFile;
-		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = filter;
-		ofn.nFilterIndex = 1;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-		if (GetSaveFileNameA(&ofn) == TRUE)
-		{
-			return ofn.lpstrFile;
-		}
-		return std::string();
 	}
 
 }

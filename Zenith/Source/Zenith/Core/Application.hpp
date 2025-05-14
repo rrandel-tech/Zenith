@@ -23,6 +23,7 @@ namespace Zenith {
 		bool Resizable = true;
 		bool EnableImGui = true;
 		std::filesystem::path IconPath;
+		std::string WorkingDirectory;
 	};
 
 	class Application
@@ -50,9 +51,6 @@ namespace Zenith {
 		void AddEventCallback(const EventCallbackFn& eventCallback) { m_EventCallbacks.push_back(eventCallback); }
 
 		void SetShowStats(bool show) { m_ShowStats = show; }
-
-		std::string OpenFile(const char* filter = "All\0*.*\0") const;
-		std::string SaveFile(const char* filter = "All\0*.*\0") const;
 
 		inline Window& GetWindow() { return *m_Window; }
 
