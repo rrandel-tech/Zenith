@@ -1,7 +1,7 @@
 #include "znpch.hpp"
 #include "Zenith/Renderer/RendererAPI.hpp"
 
-#include <Glad/glad.h>
+#include <glad/glad.h>
 
 namespace Zenith {
 

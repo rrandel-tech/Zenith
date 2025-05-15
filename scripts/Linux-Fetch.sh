@@ -49,6 +49,6 @@ chmod +x "$PREMAKE_PATH"
 # Vulkan SDK Setup
 # ====================
 
-curl -L "https://sdk.lunarg.com/sdk/download/$VULKAN_VERSION/linux/vulkansdk-linux-x86_64-$VULKAN_VERSION.tar.xz" \ | tar -xJ -C "$VENDOR"
+curl -L "https://sdk.lunarg.com/sdk/download/$VULKAN_VERSION/linux/vulkansdk-linux-x86_64-$VULKAN_VERSION.tar.xz" | tar -xJ -C "$VENDOR"
 
 mv "$VENDOR/$VULKAN_VERSION" "$VENDOR/VulkanSDK"

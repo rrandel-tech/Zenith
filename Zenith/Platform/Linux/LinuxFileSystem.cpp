@@ -107,7 +107,7 @@ namespace Zenith {
 		if (std::filesystem::exists(path))
 		{
 			std::ifstream in(path);
-			if (in.is_open())
+			if (in.is_open()) return false;
 		}
 
 		std::ofstream out(path);
