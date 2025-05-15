@@ -49,13 +49,8 @@ namespace Zenith {
 		static std::map<std::string, TagDetails>& EnabledTags() { return s_EnabledTags; }
 		static void SetDefaultTagSettings();
 
-#if defined(ZN_PLATFORM_WINDOWS)
 		template<typename... Args>
 		static void PrintMessage(Log::Type type, Log::Level level, std::format_string<Args...> format, Args&&... args);
-#else
-		template<typename... Args>
-		static void PrintMessage(Log::Type type, Log::Level level, const std::string_view format, Args&&... args);
-#endif
 
 		template<typename... Args>
 		static void PrintMessageTag(Log::Type type, Log::Level level, std::string_view tag, std::format_string<Args...> format, Args&&... args);
@@ -138,13 +133,8 @@ namespace Zenith {
 
 namespace Zenith {
 
-#if defined(ZN_PLATFORM_WINDOWS)
 	template<typename... Args>
 	void Log::PrintMessage(Log::Type type, Log::Level level, std::format_string<Args...> format, Args&&... args)
-#else
-	template<typename... Args>
-	void Log::PrintMessage(Log::Type type, Log::Level level, const std::string_view format, Args&&... args)
-#endif
 	{
 		auto detail = s_EnabledTags[""];
 		if (detail.Enabled && detail.LevelFilter <= level)
