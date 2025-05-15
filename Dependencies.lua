@@ -68,6 +68,10 @@ Dependencies = {
 		IncludeDir = "%{wks.location}/Zenith/vendor/yaml-cpp/include",
 	},
 
+	JSON = {
+		IncludeDir = "%{wks.location}/Zenith/vendor/json/include"
+	},
+
 	Tracy = {
 		LibName = "Tracy",
 		IncludeDir = "%{wks.location}/Zenith/vendor/tracy/tracy/public",

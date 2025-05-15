@@ -66,8 +66,8 @@ namespace Zenith {
 
 		static std::filesystem::path GetPersistentStoragePath();
 
-		static bool HasEnvironmentVariable(const std::string& key);
-		static bool SetEnvironmentVariable(const std::string& key, const std::string& value);
-		static std::string GetEnvironmentVariable(const std::string& key);
+		static bool HasConfigValue(const std::string& key);
+		static bool SetConfigValue(const std::string& key, const std::string& value);
+		static std::string GetConfigValue(const std::string& key);
 	};
 }

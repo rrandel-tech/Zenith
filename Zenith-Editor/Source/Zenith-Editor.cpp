@@ -20,14 +20,14 @@ public:
 				Zenith::FileSystem::CreateDirectory(m_PersistentStoragePath);
 		}
 
-		// Update the ZENITH_DIR environment variable every time we launch
+		// Update the ZENITH_DIR config entry every time we launch
 		{
 			auto workingDirectory = Zenith::FileSystem::GetWorkingDirectory();
 
 			if (workingDirectory.stem().string() == "Zenith-Editor")
 				workingDirectory = workingDirectory.parent_path();
 
-			Zenith::FileSystem::SetEnvironmentVariable("ZENITH_DIR", workingDirectory.string());
+			Zenith::FileSystem::SetConfigValue("ZENITH_DIR", workingDirectory.string());
 		}
 
 		PushLayer(znew Zenith::EditorLayer());
@@ -40,7 +40,7 @@ private:
 Zenith::Application* Zenith::CreateApplication(int argv, char** argc)
 {
 	Zenith::ApplicationSpecification specification;
-	specification.Name = "Zenit-Editor";
+	specification.Name = "Zenith-Editor";
 	specification.WindowWidth = 1600;
 	specification.WindowHeight = 900;
 	specification.WindowDecorated = true;

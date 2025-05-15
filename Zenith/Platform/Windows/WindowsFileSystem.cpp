@@ -13,6 +13,8 @@
 #include <filesystem>
 #include <thread>
 
+constexpr const char* ZENITH_REGISTRY_PATH = "Software\\ZenithEngine";
+
 namespace Zenith {
 
 	static std::filesystem::path s_PersistentStoragePath;
@@ -87,48 +89,49 @@ namespace Zenith {
 		return s_PersistentStoragePath;
 	}
 
-	bool FileSystem::HasEnvironmentVariable(const std::string& key)
+	bool FileSystem::HasConfigValue(const std::string& key)
 	{
 		HKEY hKey;
-		LSTATUS lOpenStatus = RegOpenKeyExA(HKEY_CURRENT_USER, "Environment", 0, KEY_ALL_ACCESS, &hKey);
+		LSTATUS status = RegOpenKeyExA(HKEY_CURRENT_USER, ZENITH_REGISTRY_PATH, 0, KEY_READ, &hKey);
+		if (status != ERROR_SUCCESS)
+			return false;
 
-		if (lOpenStatus == ERROR_SUCCESS)
-		{
-			lOpenStatus = RegQueryValueExA(hKey, key.c_str(), 0, NULL, NULL, NULL);
-			RegCloseKey(hKey);
-		}
-
-		return lOpenStatus == ERROR_SUCCESS;
+		status = RegQueryValueExA(hKey, key.c_str(), nullptr, nullptr, nullptr, nullptr);
+		RegCloseKey(hKey);
+		return status == ERROR_SUCCESS;
 	}
 
-	bool FileSystem::SetEnvironmentVariable(const std::string& key, const std::string& value)
+	bool FileSystem::SetConfigValue(const std::string& key, const std::string& value)
 	{
 		HKEY hKey;
-		LPCSTR keyPath = "Environment";
-		DWORD createdNewKey;
-		LSTATUS lOpenStatus = RegCreateKeyExA(HKEY_CURRENT_USER, keyPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &createdNewKey);
-		if (lOpenStatus == ERROR_SUCCESS)
-		{
-			LSTATUS lSetStatus = RegSetValueExA(hKey, key.c_str(), 0, REG_SZ, (LPBYTE)value.c_str(), (DWORD)(value.length() + 1));
-			RegCloseKey(hKey);
+		DWORD disp;
+		LSTATUS status = RegCreateKeyExA(HKEY_CURRENT_USER, ZENITH_REGISTRY_PATH, 0, nullptr,
+																		 REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, &disp);
+		if (status != ERROR_SUCCESS)
+			return false;
 
-			if (lSetStatus == ERROR_SUCCESS)
-			{
-				SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Environment", SMTO_BLOCK, 100, NULL);
-				return true;
-			}
-		}
-
-		return false;
+		status = RegSetValueExA(hKey, key.c_str(), 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), (DWORD)(value.size() + 1));
+		RegCloseKey(hKey);
+		return status == ERROR_SUCCESS;
 	}
 
-	std::string FileSystem::GetEnvironmentVariable(const std::string& key)
+	std::string FileSystem::GetConfigValue(const std::string& key)
 	{
-		const char* value = getenv(key.c_str());
-		if (value)
-			return std::string(value);
-		else
+		HKEY hKey;
+		LSTATUS status = RegOpenKeyExA(HKEY_CURRENT_USER, ZENITH_REGISTRY_PATH, 0, KEY_READ, &hKey);
+		if (status != ERROR_SUCCESS)
 			return {};
+
+		char buffer[512];
+		DWORD bufferSize = sizeof(buffer);
+		DWORD type = 0;
+
+		status = RegQueryValueExA(hKey, key.c_str(), nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufferSize);
+		RegCloseKey(hKey);
+
+		if (status == ERROR_SUCCESS && type == REG_SZ)
+			return std::string(buffer, bufferSize - 1);
+		return {};
 	}
 
 }

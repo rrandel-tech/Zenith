@@ -11,8 +11,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <filesystem>
-#include <thread>
+#include <nlohmann/json.hpp>
 
 namespace Zenith {
 
@@ -76,7 +75,12 @@ namespace Zenith {
 		if (!s_PersistentStoragePath.empty())
 			return s_PersistentStoragePath;
 
-		s_PersistentStoragePath = HasEnvironmentVariable("ZENITH_DIR") ? GetEnvironmentVariable("ZENITH_DIR") : "..";
+		const char* configHome = std::getenv("XDG_CONFIG_HOME");
+		if (configHome)
+			s_PersistentStoragePath = configHome;
+		else
+			s_PersistentStoragePath = std::getenv("HOME") + std::string("/.config");
+
 		s_PersistentStoragePath /= "Zenith-Editor";
 
 		if (!std::filesystem::exists(s_PersistentStoragePath))
@@ -85,41 +89,39 @@ namespace Zenith {
 		return s_PersistentStoragePath;
 	}
 
-	bool FileSystem::HasEnvironmentVariable(const std::string& key)
+	bool FileSystem::HasConfigValue(const std::string& key)
 	{
-		return !GetEnvironmentVariable(key).empty();
+		auto path = GetPersistentStoragePath() / "zenith.conf";
+		if (!std::filesystem::exists(path)) return false;
+
+		std::ifstream in(path);
+		if (!in.is_open()) return false;
+
+		// Read the config file
 	}
 
-	bool FileSystem::SetEnvironmentVariable(const std::string& key, const std::string& value)
+	bool FileSystem::SetConfigValue(const std::string& key, const std::string& value)
 	{
-		int result = setenv(key.c_str(), value.c_str(), 1);
-		if (result != 0)
+		auto path = GetPersistentStoragePath() / "zenith.conf";
+
+		if (std::filesystem::exists(path))
 		{
-			return false;
+			std::ifstream in(path);
+			if (in.is_open())
 		}
 
-		std::filesystem::path zshrcPath = std::getenv("HOME");
-		zshrcPath /= ".zshrc";
-
-		std::ofstream zshrcFile(zshrcPath, std::ios::app);
-		if (!zshrcFile.is_open())
-		{
-			return false;
-		}
-
-		zshrcFile << std::format("\nexport {}={}\n", key, value);
-		zshrcFile.close();
-
+		std::ofstream out(path);
+		if (!out.is_open()) return false;
+		// Write the config file
 		return true;
 	}
 
-	std::string FileSystem::GetEnvironmentVariable(const std::string& key)
+	std::string FileSystem::GetConfigValue(const std::string& key)
 	{
-		const char* value = getenv(key.c_str());
-		if (value)
-			return std::string(value);
-		else
-			return {};
+		auto path = GetPersistentStoragePath() / "zenith.conf";
+		if (!std::filesystem::exists(path)) return {};
+
+		// Read the config file
 	}
 
 }

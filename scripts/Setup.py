@@ -14,12 +14,6 @@ colorama.init(autoreset=True)
 os.chdir('../')
 zenith_dir = os.getcwd()
 
-# Set ZENITH_DIR environment variable to current Zenith root directory
-print(f"{Style.BRIGHT}{Fore.BLACK}{Back.GREEN}Setting ZENITH_DIR to {zenith_dir}")
-subprocess.call(["setx", "ZENITH_DIR", zenith_dir])
-os.environ["ZENITH_DIR"] = zenith_dir
-print("\n")
-
 if (not Vulkan.CheckVulkanSDK()):
 	print("Vulkan SDK not installed.")
 	exit()

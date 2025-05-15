@@ -133,7 +133,7 @@ namespace Zenith {
 	{
 	public:
 		bool Initialize() { return false; }
-		void SetCapturePath(const std::string&) {}
+		void SetCaptureName(const std::string&) {}
 		void SetCaptureKeys(const int*, int) {}
 		void TriggerCapture() {}
 		bool IsAvailable() const { return false; }
