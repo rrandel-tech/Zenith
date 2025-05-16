@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 
+#include "Input.hpp"
 #include "FatalSignal.hpp"
 
 #include "imgui/imgui_internal.h"
@@ -161,10 +162,17 @@ namespace Zenith {
 				int keys[1] = { GLFW_KEY_C };
 				m_RenderDoc.SetCaptureKeys(keys, 1);
 				
+				// On Render thread
+				Renderer::Submit([&]()
+				{
+					m_Window->SwapBuffers();
+				});
+
 				//TODO: This should be in the render thread
 				Renderer::SwapQueues();
 			}
-			m_Window->SwapBuffers();
+
+			Input::ClearReleasedKeys();
 
 			float time = GetTime();
 			m_Frametime = time - m_LastFrameTime;
@@ -189,6 +197,9 @@ namespace Zenith {
 
 	void Application::ProcessEvents()
 	{
+		Input::TransitionPressedKeys();
+		Input::TransitionPressedButtons();
+
 		m_Window->ProcessEvents();
 	}
 
@@ -198,6 +209,8 @@ namespace Zenith {
 		dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return OnWindowResize(e); });
 		dispatcher.Dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return OnWindowMinimize(e); });
 		dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
+
+		ZN_CORE_TRACE("{}", event.ToString());
 
 		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
 		{

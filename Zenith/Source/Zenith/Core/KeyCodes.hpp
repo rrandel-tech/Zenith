@@ -1,7 +1,9 @@
 #pragma once
 
-namespace Zenith
-{
+#include <ostream>
+#include <cstdint>
+
+namespace Zenith {
 	typedef enum class KeyCode : uint16_t
 	{
 		// From glfw3.h
@@ -137,9 +139,44 @@ namespace Zenith
 		Menu = 348
 	} Key;
 
+	enum class KeyState
+	{
+		None = -1,
+		Pressed,
+		Held,
+		Released
+	};
+
+	enum class CursorMode
+	{
+		Normal = 0,
+		Hidden = 1,
+		Locked = 2
+	};
+
+	typedef enum class MouseButton : uint16_t
+	{
+		Button0 = 0,
+		Button1 = 1,
+		Button2 = 2,
+		Button3 = 3,
+		Button4 = 4,
+		Button5 = 5,
+		Left = Button0,
+		Right = Button1,
+		Middle = Button2
+	} Button;
+
+
 	inline std::ostream& operator<<(std::ostream& os, KeyCode keyCode)
 	{
 		os << static_cast<int32_t>(keyCode);
+		return os;
+	}
+
+	inline std::ostream& operator<<(std::ostream& os, MouseButton button)
+	{
+		os << static_cast<int32_t>(button);
 		return os;
 	}
 }
@@ -271,7 +308,7 @@ namespace Zenith
 #define ZN_KEY_RIGHT_SUPER     ::Zenith::Key::RightSuper
 #define ZN_KEY_MENU            ::Zenith::Key::Menu
 
-// Mouse (TODO: move into separate file probably)
-#define ZN_MOUSE_BUTTON_LEFT    0
-#define ZN_MOUSE_BUTTON_RIGHT   1
-#define ZN_MOUSE_BUTTON_MIDDLE  2
+// Mouse
+#define ZN_MOUSE_BUTTON_LEFT    ::Zenith::Button::Left
+#define ZN_MOUSE_BUTTON_RIGHT   ::Zenith::Button::Right
+#define ZN_MOUSE_BUTTON_MIDDLE  ::Zenith::Button::Middle

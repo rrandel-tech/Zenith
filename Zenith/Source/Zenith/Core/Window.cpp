@@ -5,6 +5,7 @@
 #include "Zenith/Core/Events/ApplicationEvent.hpp"
 #include "Zenith/Core/Events/KeyEvent.hpp"
 #include "Zenith/Core/Events/MouseEvent.hpp"
+#include "Zenith/Core/Input.hpp"
 
 #include <imgui.h>
 #include "stb_image.h"
@@ -142,90 +143,112 @@ namespace Zenith {
 	void Window::RegisterGLFWCallbacks()
 	{
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-				data.Width = width;
-				data.Height = height;
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				WindowResizeEvent event((uint32_t)width, (uint32_t)height);
-				data.EventCallback(event);
-			});
+			WindowResizeEvent event((uint32_t)width, (uint32_t)height);
+			data.EventCallback(event);
+			data.Width = width;
+			data.Height = height;
+		});
 
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-				WindowCloseEvent event;
-				data.EventCallback(event);
-			});
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+
+			WindowCloseEvent event;
+			data.EventCallback(event);
+		});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				switch (action)
-				{
+			switch (action)
+			{
 				case GLFW_PRESS:
 				{
+					Input::UpdateKeyState((KeyCode)key, KeyState::Pressed);
 					KeyPressedEvent event((KeyCode)key, 0);
 					data.EventCallback(event);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
+					Input::UpdateKeyState((KeyCode)key, KeyState::Released);
 					KeyReleasedEvent event((KeyCode)key);
 					data.EventCallback(event);
 					break;
 				}
 				case GLFW_REPEAT:
 				{
+					Input::UpdateKeyState((KeyCode)key, KeyState::Held);
 					KeyPressedEvent event((KeyCode)key, 1);
 					data.EventCallback(event);
 					break;
 				}
-				}
-			});
+			}
+		});
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, uint32_t codepoint)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-				KeyTypedEvent event((KeyCode)codepoint);
-				data.EventCallback(event);
-			});
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+
+			KeyTypedEvent event((KeyCode)codepoint);
+			data.EventCallback(event);
+		});
 
 		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				switch (action)
-				{
+			switch (action)
+			{
 				case GLFW_PRESS:
 				{
-					MouseButtonPressedEvent event(button);
+					Input::UpdateButtonState((MouseButton)button, KeyState::Pressed);
+					MouseButtonPressedEvent event((MouseButton)button);
 					data.EventCallback(event);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
-					MouseButtonReleasedEvent event(button);
+					Input::UpdateButtonState((MouseButton)button, KeyState::Released);
+					MouseButtonReleasedEvent event((MouseButton)button);
 					data.EventCallback(event);
 					break;
 				}
-				}
-			});
+			}
+		});
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-				MouseScrolledEvent event((float)xOffset, (float)yOffset);
-				data.EventCallback(event);
-			});
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+
+			MouseScrolledEvent event((float)xOffset, (float)yOffset);
+			data.EventCallback(event);
+		});
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double x, double y)
-			{
-				auto& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-				MouseMovedEvent event((float)x, (float)y);
-				data.EventCallback(event);
-			});
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			MouseMovedEvent event((float)x, (float)y);
+			data.EventCallback(event);
+		});
+
+		glfwSetTitlebarHitTestCallback(m_Window, [](GLFWwindow* window, int x, int y, int* hit)
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			WindowTitleBarHitTestEvent event(x, y, *hit);
+			data.EventCallback(event);
+		});
+
+		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconified)
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			WindowMinimizeEvent event((bool)iconified);
+			data.EventCallback(event);
+		});
 	}
 
 	void Window::Shutdown()
@@ -247,6 +270,7 @@ namespace Zenith {
 	void Window::ProcessEvents()
 	{
 		glfwPollEvents();
+		Input::Update();
 	}
 
 	void Window::SwapBuffers()

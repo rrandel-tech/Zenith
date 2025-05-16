@@ -10,6 +10,7 @@
 
 #include "Zenith/Core/Application.hpp"
 #include "Zenith/Renderer/Renderer.hpp"
+#include "Zenith/Core/Input.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -66,6 +67,8 @@ namespace Zenith {
 
 	void ImGuiLayer::Begin()
 	{
+		ImGui::SetMouseCursor(Input::GetCursorMode() == CursorMode::Normal ? ImGui::GetMouseCursor() : ImGuiMouseCursor_None);
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -92,6 +95,28 @@ namespace Zenith {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_context);
+		}
+	}
+
+	bool ImGuiLayer::IsInputEnabled()
+	{
+		const auto& io = ImGui::GetIO();
+		return (io.ConfigFlags & ImGuiConfigFlags_NoMouse) == 0 && (io.ConfigFlags & ImGuiConfigFlags_NavNoCaptureKeyboard) == 0;
+	}
+
+	void ImGuiLayer::SetInputEnabled(bool enabled)
+	{
+		auto& io = ImGui::GetIO();
+
+		if (enabled)
+		{
+			io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+			io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
+		}
+		else
+		{
+			io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+			io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
 		}
 	}
 

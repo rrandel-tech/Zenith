@@ -64,7 +64,8 @@ namespace Zenith {
 	{
 		ZN_PROFILE_FUNC();
 
-		ImGui::Begin("EditorLayer");
+		ImGui::Begin("Settings");
+
 		ImGui::ColorEdit4("Clear Color", m_ClearColor);
 
 		ImGui::Separator();
@@ -90,6 +91,35 @@ namespace Zenith {
 				ZN_ERROR("No file selected.");
 			}
 		}
+
+		ImGui::End();
+
+		// Controller Test Window
+		ImGui::Begin("Controller Test");
+
+		static int controllerID_UI = 1;
+		static int buttonID = 0;
+		static int axisID = 0;
+
+		ImGui::InputInt("Controller ID", &controllerID_UI);
+		ImGui::InputInt("Button ID", &buttonID);
+		ImGui::InputInt("Axis ID", &axisID);
+
+		int controllerID = controllerID_UI - 1;
+
+		if (Input::IsControllerPresent(controllerID))
+		{
+			bool isDown = Input::IsControllerButtonDown(controllerID, buttonID);
+			float axisValue = Input::GetControllerAxis(controllerID, axisID);
+
+			ImGui::Text("Button %d: %s", buttonID, isDown ? "Pressed" : "Released");
+			ImGui::Text("Axis %d: %.3f", axisID, axisValue);
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1, 0.5f, 0.5f, 1), "Controller %d not connected", controllerID_UI);
+		}
+
 		ImGui::End();
 	}
 

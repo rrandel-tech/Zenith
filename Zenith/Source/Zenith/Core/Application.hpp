@@ -58,6 +58,8 @@ namespace Zenith {
 
 		static inline Application& Get() { return *s_Instance; }
 
+		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
+
 		Timestep GetTimestep() const { return m_TimeStep; }
 		Timestep GetFrametime() const { return m_Frametime; }
 		float GetTime() const; // TODO: This should be in "Platform"

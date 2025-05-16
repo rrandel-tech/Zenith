@@ -14,6 +14,9 @@ namespace Zenith {
 		void Begin();
 		void End();
 
+		bool IsInputEnabled();
+		void SetInputEnabled(bool enabled);
+
 		void OnAttach() override;
 		void OnDetach() override;
 		void OnImGuiRender() override;
