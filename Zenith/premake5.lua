@@ -41,7 +41,7 @@ project "Zenith"
 		links { "opengl32.lib" }
 
 	filter "system:linux"
-		defines { "ZN_PLATFORM_LINUX", "__EMULATE_UUID", "BACKWARD_HAS_DW", "BACKWARD_HAS_LIBUNWIND" }
+		defines { "ZN_PLATFORM_LINUX", "_GLFW_WAYLAND", "GLFW_INCLUDE_NONE", "__EMULATE_UUID", "BACKWARD_HAS_DW", "BACKWARD_HAS_LIBUNWIND" }
 		links { "dw", "dl", "unwind", "pthread" }
 
 	filter "configurations:Debug or configurations:Debug-AS"

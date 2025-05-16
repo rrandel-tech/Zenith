@@ -31,8 +31,13 @@ Dependencies = {
 	},
 
 	GLFW = {
-		LibName = "GLFW",
-		IncludeDir = "%{wks.location}/Zenith/vendor/GLFW/include"
+		Windows = {
+			LibName = "GLFW",
+			IncludeDir = "%{wks.location}/Zenith/vendor/GLFW/include"
+		},
+		Linux = {
+			LibName = "glfw"
+		},
 	},
 
 	Glad = {
