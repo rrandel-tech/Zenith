@@ -37,7 +37,7 @@ project "Zenith"
 
 	filter "system:windows"
 		systemversion "latest"
-		defines { "ZN_PLATFORM_WINDOWS" }
+		defines { "ZN_PLATFORM_WINDOWS", "GLFW_INCLUDE_NONE" }
 		links { "opengl32.lib" }
 
 	filter "system:linux"

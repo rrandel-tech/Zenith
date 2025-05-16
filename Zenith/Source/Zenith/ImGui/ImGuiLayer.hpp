@@ -1,5 +1,6 @@
 #pragma once
 
+#include "znpch.hpp"
 #include "Zenith/Core/Layer.hpp"
 
 namespace Zenith {
@@ -7,21 +8,13 @@ namespace Zenith {
 	class ImGuiLayer : public Layer
 	{
 	public:
-		ImGuiLayer();
-		ImGuiLayer(const std::string& name);
-		~ImGuiLayer() override;
+		virtual void Begin() = 0;
+		virtual void End() = 0;
 
-		void Begin();
-		void End();
+		virtual bool IsInputEnabled() = 0;
+		virtual void SetInputEnabled(bool enabled) = 0;
 
-		bool IsInputEnabled();
-		void SetInputEnabled(bool enabled);
-
-		void OnAttach() override;
-		void OnDetach() override;
-		void OnImGuiRender() override;
-	private:
-		float m_Time = 0.0f;
+		static ImGuiLayer* Create();
 	};
 
 }

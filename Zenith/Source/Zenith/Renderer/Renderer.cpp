@@ -5,6 +5,8 @@
 
 #include "RendererAPI.hpp"
 
+#include "Zenith/Platform/OpenGL/OpenGLRenderer.hpp"
+
 namespace Zenith {
 
 	static RendererAPI* s_RendererAPI = nullptr;
@@ -20,44 +22,39 @@ namespace Zenith {
 	static RenderCommandQueue* s_CommandQueue[s_RenderCommandQueueCount];
 	static std::atomic<uint32_t> s_RenderCommandQueueSubmissionIndex = 0;
 
+	static RendererAPI* InitRendererAPI()
+	{
+		switch (RendererAPI::Current())
+		{
+			case RendererAPIType::OpenGL: return new OpenGLRenderer();
+		}
+		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
+		return nullptr;
+	}
+
 	void Renderer::Init()
 	{
 		s_CommandQueue[0] = znew RenderCommandQueue();
 		s_CommandQueue[1] = znew RenderCommandQueue();
 
-		Renderer::Submit([]() { RendererAPI::Init(); });
+		s_RendererAPI = InitRendererAPI();
+
+		Renderer::WaitAndRender();
+
+		s_RendererAPI->Init();
 	}
 
 	void Renderer::Shutdown()
 	{
+		s_RendererAPI->Shutdown();
+
 		delete s_CommandQueue[0];
 		delete s_CommandQueue[1];
 	}
 
-	void Renderer::Clear()
+	RendererCapabilities& Renderer::GetCapabilities()
 	{
-		Renderer::Submit([]() {
-			RendererAPI::Clear(0.0f, 0.0f, 0.0f, 1.0f);
-		});
-	}
-
-	void Renderer::Clear(float r, float g, float b, float a)
-	{
-		Renderer::Submit([=]() {
-			RendererAPI::Clear(r, g, b, a);
-		});
-	}
-
-	void Renderer::ClearMagenta()
-	{
-		Clear(1, 0, 1);
-	}
-
-	void Renderer::DrawIndexed(uint32_t count)
-	{
-		Renderer::Submit([=]() {
-			RendererAPI::DrawIndexed(count);
-		});
+		return s_RendererAPI->GetCapabilities();
 	}
 
 	void Renderer::WaitAndRender()
@@ -78,6 +75,16 @@ namespace Zenith {
 	uint32_t Renderer::GetRenderQueueSubmissionIndex()
 	{
 		return s_RenderCommandQueueSubmissionIndex;
+	}
+
+	void Renderer::BeginFrame()
+	{
+		s_RendererAPI->BeginFrame();
+	}
+
+	void Renderer::EndFrame()
+	{
+		s_RendererAPI->EndFrame();
 	}
 
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()

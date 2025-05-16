@@ -52,6 +52,9 @@ namespace Zenith {
 
 		ZN_CORE_VERIFY(NFD::Init() == NFD_OKAY);
 
+		Renderer::Init();
+		Renderer::WaitAndRender();
+
 		if (specification.StartMaximized)
 			m_Window->Maximize();
 		else
@@ -60,12 +63,9 @@ namespace Zenith {
 
 		if (m_Specification.EnableImGui)
 		{
-			m_ImGuiLayer = znew ImGuiLayer("ImGui");
+			m_ImGuiLayer = ImGuiLayer::Create();
 			PushOverlay(m_ImGuiLayer);
 		}
-
-		Renderer::Init();
-		Renderer::WaitAndRender();
 	}
 
 	Application::~Application()
@@ -79,6 +79,8 @@ namespace Zenith {
 			layer->OnDetach();
 			delete layer;
 		}
+
+		Renderer::Shutdown();
 
 		delete m_Profiler;
 		m_Profiler = nullptr;
@@ -116,15 +118,10 @@ namespace Zenith {
 		m_ImGuiLayer->Begin();
 
 		ImGui::Begin("Renderer");
-		auto& caps = RendererAPI::GetCapabilities();
+		auto& caps = Renderer::GetCapabilities();
 		ImGui::Text("Vendor: %s", caps.Vendor.c_str());
-		ImGui::Text("Renderer: %s", caps.Renderer.c_str());
+		ImGui::Text("Renderer: %s", caps.Device.c_str());
 		ImGui::Text("Version: %s", caps.Version.c_str());
-		ImGui::Separator();
-		ImGui::Text("Max Samples: %d", caps.MaxSamples);
-		ImGui::Text("Max Anisotropy: %.1f", caps.MaxAnisotropy);
-		ImGui::Text("Max Texture Units: %d", caps.MaxTextureUnits);
-		ImGui::Separator();
 		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
 		ImGui::End();
 
@@ -137,12 +134,16 @@ namespace Zenith {
 		OnInit();
 		while (m_Running)
 		{
+			static uint64_t frameCounter = 0;
+
 			ProcessEvents();
 
 			m_Profiler->Clear();
 
 			if (!m_Minimized)
 			{
+				Renderer::BeginFrame();
+
 				ZN_SCOPE_PERF("Application Layer::OnUpdate");
 				for (Layer* layer : m_LayerStack)
 					layer->OnUpdate(m_TimeStep);
@@ -151,22 +152,20 @@ namespace Zenith {
 				Application* app = this;
 				if (m_Specification.EnableImGui)
 				{
-					Renderer::Submit([app]() { app->RenderImGui(); });
+					Renderer::Submit([app]() {app->RenderImGui(); });
 					Renderer::Submit([=]() { m_ImGuiLayer->End(); });
 				}
+				Renderer::EndFrame();
 
+				// On Render thread
+				m_Window->GetRenderContext()->BeginFrame();
 				Renderer::WaitAndRender();
+				m_Window->SwapBuffers();
 
 				m_RenderDoc.SetCaptureName("Startup");
 
 				int keys[1] = { GLFW_KEY_C };
 				m_RenderDoc.SetCaptureKeys(keys, 1);
-				
-				// On Render thread
-				Renderer::Submit([&]()
-				{
-					m_Window->SwapBuffers();
-				});
 
 				//TODO: This should be in the render thread
 				Renderer::SwapQueues();
@@ -178,6 +177,8 @@ namespace Zenith {
 			m_Frametime = time - m_LastFrameTime;
 			m_TimeStep = glm::min<float>(m_Frametime, 0.0333f);
 			m_LastFrameTime = time;
+
+			frameCounter++;
 
 			ZN_PROFILE_MARK_FRAME;
 		}
@@ -236,6 +237,8 @@ namespace Zenith {
 		{
 			return false;
 		}
+
+		m_Window->GetRenderContext()->OnResize(width, height);
 
 		return false;
 	}

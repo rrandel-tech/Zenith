@@ -1,22 +1,18 @@
 #include "znpch.hpp"
-#include "ImGuiLayer.hpp"
-
-#include "Zenith/Renderer/Renderer.hpp"
-
-#include "Zenith/Platform/OpenGL/OpenGLImGuiLayer.hpp"
+#include "RendererContext.hpp"
 
 #include "Zenith/Renderer/RendererAPI.hpp"
 
-#include <imgui.h>
+#include "Zenith/Platform/OpenGL/OpenGLContext.hpp"
 
 namespace Zenith {
 
-	ImGuiLayer* ImGuiLayer::Create()
+	Ref<RendererContext> RendererContext::Create(GLFWwindow* windowHandle)
 	{
 		switch (RendererAPI::Current())
 		{
 			case RendererAPIType::None:    return nullptr;
-			case RendererAPIType::OpenGL:  return new OpenGLImGuiLayer();
+			case RendererAPIType::OpenGL:  return Ref<OpenGLContext>::Create(windowHandle);
 		}
 		ZN_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

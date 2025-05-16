@@ -1,8 +1,9 @@
 #pragma once
 
-namespace Zenith {
+#include "RendererTypes.hpp"
+#include "RendererCapabilities.hpp"
 
-	using RendererID = uint32_t;
+namespace Zenith {
 
 	enum class RendererAPIType
 	{
@@ -10,32 +11,16 @@ namespace Zenith {
 		OpenGL
 	};
 
-	struct RenderAPICapabilities
-	{
-		std::string Vendor;
-		std::string Renderer;
-		std::string Version;
-
-		int MaxSamples = 0;
-		float MaxAnisotropy = 0.0f;
-		int MaxTextureUnits = 0;
-	};
-
 	class RendererAPI
 	{
 	public:
-		static void Init();
-		static void Shutdown();
+		virtual void Init() = 0;
+		virtual void Shutdown() = 0;
 
-		static void Clear(float r, float g, float b, float a);
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
 
-		static void DrawIndexed(uint32_t count);
-
-		static RenderAPICapabilities& GetCapabilities()
-		{
-			static RenderAPICapabilities capabilities;
-			return capabilities;
-		}
+		virtual RendererCapabilities& GetCapabilities() = 0;
 
 		static RendererAPIType Current() { return s_CurrentRendererAPI; }
 		static void SetAPI(RendererAPIType api);

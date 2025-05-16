@@ -2,6 +2,7 @@
 
 #include "Zenith/Core/Base.hpp"
 #include "Zenith/Core/Events/Event.hpp"
+#include "Zenith/Renderer/RendererContext.hpp"
 
 #include <filesystem>
 #include <functional>
@@ -56,6 +57,7 @@ public:
 
   inline void *GetNativeWindow() const { return m_Window; }
 
+	virtual Ref<RendererContext> GetRenderContext() { return m_RendererContext; }
 public:
   static Window *
   Create(const WindowSpecification &specification = WindowSpecification());
@@ -76,6 +78,8 @@ private:
 
   WindowData m_Data;
   float m_LastFrameTime = 0.0f;
+
+	Ref<RendererContext> m_RendererContext;
 };
 
 }

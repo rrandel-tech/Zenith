@@ -1,7 +1,11 @@
 #pragma once
 
+#include "RendererContext.hpp"
 #include "RenderCommandQueue.hpp"
-#include "RendererAPI.hpp"
+
+#include "Zenith/Core/Application.hpp"
+
+#include "RendererCapabilities.hpp"
 
 namespace Zenith {
 
@@ -10,16 +14,15 @@ namespace Zenith {
 	public:
 		typedef void(*RenderCommandFn)(void*);
 
-		// Commands
-		static void Clear();
-		static void Clear(float r, float g, float b, float a = 1.0f);
-
-		static void DrawIndexed(uint32_t count);
-
-		static void ClearMagenta();
+		static Ref<RendererContext> GetContext()
+		{
+			return Application::Get().GetWindow().GetRenderContext();
+		}
 
 		static void Init();
 		static void Shutdown();
+
+		static RendererCapabilities& GetCapabilities();
 
 		template<typename FuncT>
 		static void Submit(FuncT&& func)
@@ -40,10 +43,27 @@ namespace Zenith {
 		static void WaitAndRender();
 		static void SwapQueues();
 
+		static void BeginFrame();
+		static void EndFrame();
+
 		static uint32_t GetRenderQueueIndex();
 		static uint32_t GetRenderQueueSubmissionIndex();
+
 	private:
 		static RenderCommandQueue& GetRenderCommandQueue();
 	};
+
+	namespace Utils {
+
+		inline void DumpGPUInfo()
+		{
+			auto& caps = Renderer::GetCapabilities();
+			ZN_CORE_TRACE("GPU Info:");
+			ZN_CORE_TRACE("  Vendor: {0}", caps.Vendor);
+			ZN_CORE_TRACE("  Device: {0}", caps.Device);
+			ZN_CORE_TRACE("  Version: {0}", caps.Version);
+		}
+
+	}
 
 }

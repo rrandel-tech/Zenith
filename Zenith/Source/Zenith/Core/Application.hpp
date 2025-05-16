@@ -67,9 +67,9 @@ namespace Zenith {
 		static const char* GetConfigurationName();
 		static const char* GetPlatformName();
 
-		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
-
 		PerformanceProfiler* GetPerformanceProfiler() { return m_Profiler; }
+
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 	private:
 		void ProcessEvents();
 
