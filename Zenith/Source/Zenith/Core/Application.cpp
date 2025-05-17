@@ -29,7 +29,7 @@ namespace Zenith {
 	{
 		FatalSignal::Install();
 
-		m_RenderDoc.Initialize();
+		//m_RenderDoc.Initialize();
 
 		s_Instance = this;
 
@@ -52,8 +52,8 @@ namespace Zenith {
 
 		ZN_CORE_VERIFY(NFD::Init() == NFD_OKAY);
 
-		Renderer::Init();
-		Renderer::WaitAndRender();
+		// Renderer::Init();
+		// Renderer::WaitAndRender();
 
 		if (specification.StartMaximized)
 			m_Window->Maximize();
@@ -61,11 +61,11 @@ namespace Zenith {
 			m_Window->CenterWindow();
 		m_Window->SetResizable(specification.Resizable);
 
-		if (m_Specification.EnableImGui)
+		/*if (m_Specification.EnableImGui)
 		{
 			m_ImGuiLayer = ImGuiLayer::Create();
 			PushOverlay(m_ImGuiLayer);
-		}
+		}*/
 	}
 
 	Application::~Application()
@@ -80,7 +80,7 @@ namespace Zenith {
 			delete layer;
 		}
 
-		Renderer::Shutdown();
+		//Renderer::Shutdown();
 
 		delete m_Profiler;
 		m_Profiler = nullptr;
@@ -142,14 +142,14 @@ namespace Zenith {
 
 			if (!m_Minimized)
 			{
-				Renderer::BeginFrame();
+				// Renderer::BeginFrame();
 
 				ZN_SCOPE_PERF("Application Layer::OnUpdate");
 				for (Layer* layer : m_LayerStack)
 					layer->OnUpdate(m_TimeStep);
 
 				// Render ImGui on render thread
-				Application* app = this;
+				/*Application* app = this;
 				if (m_Specification.EnableImGui)
 				{
 					Renderer::Submit([app]() {app->RenderImGui(); });
@@ -159,16 +159,16 @@ namespace Zenith {
 
 				// On Render thread
 				m_Window->GetRenderContext()->BeginFrame();
-				Renderer::WaitAndRender();
+				Renderer::WaitAndRender();*/
 				m_Window->SwapBuffers();
 
-				m_RenderDoc.SetCaptureName("Startup");
+				// m_RenderDoc.SetCaptureName("Startup");
 
 				int keys[1] = { GLFW_KEY_C };
 				m_RenderDoc.SetCaptureKeys(keys, 1);
 
-				//TODO: This should be in the render thread
-				Renderer::SwapQueues();
+				// TODO: This should be in the render thread
+				// Renderer::SwapQueues();
 			}
 
 			Input::ClearReleasedKeys();
@@ -182,6 +182,7 @@ namespace Zenith {
 
 			ZN_PROFILE_MARK_FRAME;
 		}
+		
 		OnShutdown();
 	}
 
@@ -238,7 +239,7 @@ namespace Zenith {
 			return false;
 		}
 
-		m_Window->GetRenderContext()->OnResize(width, height);
+		// m_Window->GetRenderContext()->OnResize(width, height);
 
 		return false;
 	}

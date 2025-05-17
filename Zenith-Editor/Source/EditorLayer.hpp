@@ -21,8 +21,6 @@ namespace Zenith {
 
 		void UpdateWindowTitle(const std::string& sceneName);
 	private:
-		Ref<VertexBuffer> m_VB;
-		Ref<IndexBuffer> m_IB;
 		float m_ClearColor[4];
 	};
 

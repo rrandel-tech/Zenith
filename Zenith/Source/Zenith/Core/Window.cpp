@@ -46,6 +46,9 @@ void Window::Init() {
 		s_GLFWInitialized = true;
 	}
 
+	if (RendererAPI::Current() == RendererAPIType::Vulkan)
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
 	if (!m_Specification.Decorated) {
 		// This removes titlebar on all platforms
 		// and all of the native window effects on non-Windows platforms
@@ -95,8 +98,8 @@ void Window::Init() {
 	}
 
 	// Create Renderer Context
-	m_RendererContext = RendererContext::Create(m_Window);
-	m_RendererContext->Create();
+	// m_RendererContext = RendererContext::Create(m_Window);
+	// m_RendererContext->Create();
 
 	glfwSetWindowUserPointer(m_Window, &m_Data);
 
@@ -256,7 +259,14 @@ void Window::ProcessEvents() {
 }
 
 void Window::SwapBuffers() {
-	m_RendererContext->SwapBuffers();
+	glfwSwapBuffers(m_Window);
+
+	// ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+	// glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
+
+	float time = glfwGetTime();
+	float delta = time - m_LastFrameTime;
+	m_LastFrameTime = time;
 }
 
 void Window::SetVSync(bool enabled) {

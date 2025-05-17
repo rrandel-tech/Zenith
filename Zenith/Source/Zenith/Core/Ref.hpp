@@ -27,13 +27,11 @@ namespace Zenith {
 	public:
 		Ref()
 			: m_Instance(nullptr)
-		{
-		}
+		{}
 
 		Ref(std::nullptr_t n)
 			: m_Instance(nullptr)
-		{
-		}
+		{}
 
 		Ref(T* instance)
 			: m_Instance(instance)
@@ -46,14 +44,14 @@ namespace Zenith {
 		template<typename T2>
 		Ref(const Ref<T2>& other)
 		{
-			m_Instance = other.m_Instance;
+			m_Instance = (T*)other.m_Instance;
 			IncRef();
 		}
 
 		template<typename T2>
 		Ref(Ref<T2>&& other)
 		{
-			m_Instance = other.m_Instance;
+			m_Instance = (T*)other.m_Instance;
 			other.m_Instance = nullptr;
 		}
 
@@ -122,10 +120,34 @@ namespace Zenith {
 			m_Instance = instance;
 		}
 
+		template<typename T2>
+		Ref<T2> As() const
+		{
+			return Ref<T2>(*this);
+		}
+
 		template<typename... Args>
 		static Ref<T> Create(Args&&... args)
 		{
 			return Ref<T>(new T(std::forward<Args>(args)...));
+		}
+
+		bool operator==(const Ref<T>& other) const
+		{
+			return m_Instance == other.m_Instance;
+		}
+
+		bool operator!=(const Ref<T>& other) const
+		{
+			return !(*this == other);
+		}
+
+		bool EqualsObject(const Ref<T>& other)
+		{
+			if (!m_Instance || !other.m_Instance)
+				return false;
+
+			return *m_Instance == *other.m_Instance;
 		}
 	private:
 		void IncRef() const
