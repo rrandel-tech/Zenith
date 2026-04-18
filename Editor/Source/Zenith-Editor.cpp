@@ -22,6 +22,7 @@ Zenith::Application* Zenith::CreateApplication(int argc, char** argv)
     specification.Name = "Zenith-Editor";
     specification.WindowWidth = 1280;
     specification.WindowHeight = 720;
+    specification.Mode = WindowMode::Windowed;
 
     return new ZenithEditorApplication(specification);
 }

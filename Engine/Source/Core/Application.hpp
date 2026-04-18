@@ -15,10 +15,14 @@ namespace Zenith {
     {
         std::string Name = "Zenith";
         uint32_t WindowWidth = 1600, WindowHeight = 900;
+        WindowMode Mode = WindowMode::Windowed;
+        bool VSync = true;
+        bool Resizable = true;
     };
 
     class Application
     {
+        using EventCallbackFn = std::function<void(Event&)>;
     public:
         explicit Application(const ApplicationSpecification& specification);
         virtual ~Application();
@@ -38,11 +42,15 @@ namespace Zenith {
         void PopLayer(Layer* layer);
         void PopOverlay(Layer* layer);
 
-        const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+        void AddEventCallback(const EventCallbackFn& eventCallback) { m_EventCallbacks.push_back(eventCallback); }
 
         static const char* GetConfigurationName();
         static const char* GetPlatformName();
+
+        [[nodiscard]] const ApplicationSpecification& GetSpecification() const { return m_Specification; }
     private:
+        void processEvents();
+
         bool OnWindowResize(WindowResizeEvent& e);
         bool OnWindowMinimize(WindowMinimizeEvent& e);
         bool OnWindowClose(WindowCloseEvent& e);
@@ -51,6 +59,8 @@ namespace Zenith {
         ApplicationSpecification m_Specification;
         bool m_Running = true, m_Minimized = false;
         LayerStack m_LayerStack;
+
+        std::vector<EventCallbackFn> m_EventCallbacks;
     };
 
     // Implemented by CLIENT

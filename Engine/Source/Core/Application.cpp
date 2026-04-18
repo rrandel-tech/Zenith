@@ -2,6 +2,7 @@
 #include "Application.hpp"
 
 namespace Zenith {
+
     Application::Application(const ApplicationSpecification& specification)
         : m_Specification(specification)
     {
@@ -9,9 +10,14 @@ namespace Zenith {
         windowSpec.Title = m_Specification.Name;
         windowSpec.Width = m_Specification.WindowWidth;
         windowSpec.Height = m_Specification.WindowHeight;
+        windowSpec.Mode = m_Specification.Mode;
         m_Window = std::unique_ptr(Window::Create(windowSpec));
         m_Window->Init();
         m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
+
+        m_Window->SetResizable(m_Specification.Resizable);
+        if (windowSpec.Mode == WindowMode::Windowed)
+            m_Window->CenterWindow();
     }
 
     Application::~Application()
@@ -54,6 +60,8 @@ namespace Zenith {
         OnInit();
         while (m_Running)
         {
+            processEvents();
+
             if (!m_Minimized)
             {
                 for (Layer* layer : m_LayerStack)
@@ -74,6 +82,11 @@ namespace Zenith {
     {
     }
 
+    void Application::processEvents()
+    {
+        m_Window->ProcessEvents();
+    }
+
     void Application::OnEvent(Event& event)
     {
         EventDispatcher dispatcher(event);
@@ -81,7 +94,26 @@ namespace Zenith {
         dispatcher.Dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return OnWindowMinimize(e); });
         dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
 
-        ZN_CORE_INFO("{}", event.ToString());
+        for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
+        {
+            (*--it)->OnEvent(event);
+            if (event.Handled)
+                break;
+        }
+
+        if (event.Handled)
+            return;
+
+        // TODO: Should these callbacks be called BEFORE the layers recieve events?
+        //				We may actually want that since most of these callbacks will be functions REQUIRED in order for the game
+        //				to work, and if a layer has already handled the event we may end up with problems
+        for (auto& eventCallback : m_EventCallbacks)
+        {
+            eventCallback(event);
+
+            if (event.Handled)
+                break;
+        }
     }
 
     bool Application::OnWindowResize(WindowResizeEvent& e)
