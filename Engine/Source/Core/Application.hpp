@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Core/Base.hpp"
+#include "Base.hpp"
+#include "TimeStep.hpp"
 #include "Window.hpp"
-#include "Core/LayerStack.hpp"
+#include "LayerStack.hpp"
 
 #include "Events/ApplicationEvent.hpp"
 
@@ -34,7 +35,7 @@ namespace Zenith {
 
         void OnShutdown();
 
-        void OnUpdate() {}
+        void OnUpdate(Timestep ts) {}
         void OnEvent(Event& event);
 
         void PushLayer(Layer* layer);
@@ -43,6 +44,10 @@ namespace Zenith {
         void PopOverlay(Layer* layer);
 
         void AddEventCallback(const EventCallbackFn& eventCallback) { m_EventCallbacks.push_back(eventCallback); }
+
+        Timestep GetTimestep() const { return m_TimeStep; }
+        Timestep GetFrametime() const { return m_Frametime; }
+        float GetTime() const; // TODO: This should be in "Platform"
 
         static const char* GetConfigurationName();
         static const char* GetPlatformName();
@@ -59,6 +64,10 @@ namespace Zenith {
         ApplicationSpecification m_Specification;
         bool m_Running = true, m_Minimized = false;
         LayerStack m_LayerStack;
+        Timestep m_Frametime;
+        Timestep m_TimeStep;
+
+        float m_LastFrameTime = 0.0f;
 
         std::vector<EventCallbackFn> m_EventCallbacks;
     };

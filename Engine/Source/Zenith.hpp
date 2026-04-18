@@ -13,6 +13,8 @@
 
 #include "Core/Application.hpp"
 #include "Core/Log.hpp"
+#include "Core/Input.hpp"
+#include "Core/TimeStep.hpp"
 #include "Core/Assert.hpp"
 
 #include "Events/Event.hpp"

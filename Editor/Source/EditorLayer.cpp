@@ -19,8 +19,10 @@ namespace Zenith {
     {
     }
 
-    void EditorLayer::OnUpdate()
+    void EditorLayer::OnUpdate(Timestep ts)
     {
+        if (Input::IsKeyPressed(SDL_SCANCODE_W))
+            ZN_INFO("W key pressed from app!");
     }
 
     void EditorLayer::OnEvent(Event& e)

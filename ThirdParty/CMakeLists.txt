@@ -33,3 +33,17 @@ set(SDL_HAPTIC       OFF)
 set(SDL_VULKAN       ON)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/SDL3 SYSTEM)
+
+target_compile_definitions(SDL3-static INTERFACE SDL_MAIN_HANDLED)
+
+# ==== GLM (Header-only library) ====
+set(GLM_BUILD_LIBRARY OFF)
+set(GLM_BUILD_TESTS   OFF)
+set(GLM_BUILD_INSTALL OFF)
+set(GLM_ENABLE_CXX_20 ON)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm SYSTEM)
+
+target_compile_definitions(glm-header-only INTERFACE
+        GLM_FORCE_DEPTH_ZERO_TO_ONE
+)

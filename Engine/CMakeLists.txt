@@ -22,16 +22,13 @@ target_precompile_headers(Zenith PRIVATE ${ZENITH_SRC_DIR}/znpch.hpp)
 target_compile_features(Zenith PUBLIC cxx_std_23)
 target_include_directories(Zenith PUBLIC ${ZENITH_SRC_DIR})
 
-target_compile_definitions(Zenith PUBLIC
-        SDL_MAIN_HANDLED
-)
-
 target_link_libraries(Zenith
         PUBLIC
 
         # ==== Core Dependencies ====
         spdlog
         SDL3::SDL3-static
+        glm::glm-header-only
 )
 
 zenith_enable_lto(Zenith)

@@ -1,6 +1,8 @@
 #include "znpch.hpp"
 #include "Application.hpp"
 
+#include <glm/glm.hpp>
+
 namespace Zenith {
 
     Application::Application(const ApplicationSpecification& specification)
@@ -65,10 +67,16 @@ namespace Zenith {
             if (!m_Minimized)
             {
                 for (Layer* layer : m_LayerStack)
-                    layer->OnUpdate();
+                    layer->OnUpdate(m_TimeStep);
 
                 m_Window->SwapBuffers();
             }
+
+            float time = GetTime();
+            m_Frametime = time - m_LastFrameTime;
+            m_TimeStep = glm::min<float>(m_Frametime, 0.333f);
+            m_LastFrameTime = time;
+            //ZN_CORE_INFO("Frametime: {:.4f}ms | Timestep: {:.4f}ms | FPS: {:.1f}", m_Frametime * 1000.0f, m_TimeStep  * 1000.0f, 1.0f / m_Frametime);
         }
         OnShutdown();
     }
@@ -141,5 +149,12 @@ namespace Zenith {
     const char* Application::GetPlatformName()
     {
         return ZN_BUILD_PLATFORM_NAME;
+    }
+
+    float Application::GetTime() const
+    {
+        // Returns elapsed seconds since engine start as an absolute timestamp
+        static const uint64_t s_StartTime = SDL_GetTicksNS();
+        return static_cast<float>((SDL_GetTicksNS() - s_StartTime) * 1e-9);
     }
 }
