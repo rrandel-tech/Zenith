@@ -15,6 +15,7 @@ add_library(Zenith STATIC)
 target_sources(Zenith PRIVATE ${ZENITH_ROOT_SOURCES} ${ZENITH_ROOT_HEADERS})
 
 add_subdirectory(${ZENITH_SRC_DIR}/Core)
+add_subdirectory(${ZENITH_SRC_DIR}/Events)
 
 target_precompile_headers(Zenith PRIVATE ${ZENITH_SRC_DIR}/znpch.hpp)
 

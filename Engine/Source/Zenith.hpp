@@ -13,3 +13,9 @@
 
 #include "Core/Application.hpp"
 #include "Core/Log.hpp"
+#include "Core/Assert.hpp"
+
+#include "Events/Event.hpp"
+#include "Events/ApplicationEvent.hpp"
+#include "Events/KeyEvent.hpp"
+#include "Events/MouseEvent.hpp"

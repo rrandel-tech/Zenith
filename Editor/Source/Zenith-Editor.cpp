@@ -1,3 +1,5 @@
+#include "EditorLayer.hpp"
+
 #include "EntryPoint.hpp"
 
 class ZenithEditorApplication : public Zenith::Application
@@ -7,14 +9,19 @@ public:
         : Application(specification)
     {
     }
+
+    virtual void OnInit() override
+    {
+        PushLayer(new Zenith::EditorLayer());
+    }
 };
 
 Zenith::Application* Zenith::CreateApplication(int argc, char** argv)
 {
     ApplicationSpecification specification;
-    specification.name = "Zenith-Editor";
-    specification.windowWidth = 1280;
-    specification.windowHeight = 720;
+    specification.Name = "Zenith-Editor";
+    specification.WindowWidth = 1280;
+    specification.WindowHeight = 720;
 
     return new ZenithEditorApplication(specification);
 }

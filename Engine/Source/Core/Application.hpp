@@ -1,6 +1,10 @@
 #pragma once
 
 #include "Core/Base.hpp"
+#include "Window.hpp"
+#include "Core/LayerStack.hpp"
+
+#include "Events/ApplicationEvent.hpp"
 
 #include <string>
 #include <memory>
@@ -9,8 +13,8 @@ namespace Zenith {
 
     struct ApplicationSpecification
     {
-        std::string name = "Zenith";
-        uint32_t windowWidth = 1600, windowHeight = 900;
+        std::string Name = "Zenith";
+        uint32_t WindowWidth = 1600, WindowHeight = 900;
     };
 
     class Application
@@ -26,15 +30,27 @@ namespace Zenith {
 
         void OnShutdown();
 
-        const ApplicationSpecification& GetSpecification() const { return m_specification; }
+        void OnUpdate() {}
+        void OnEvent(Event& event);
+
+        void PushLayer(Layer* layer);
+        void PushOverlay(Layer* layer);
+        void PopLayer(Layer* layer);
+        void PopOverlay(Layer* layer);
+
+        const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 
         static const char* GetConfigurationName();
         static const char* GetPlatformName();
     private:
-        ApplicationSpecification m_specification;
-
-        bool m_isRunning = true;
-        bool m_isMinimized = false;
+        bool OnWindowResize(WindowResizeEvent& e);
+        bool OnWindowMinimize(WindowMinimizeEvent& e);
+        bool OnWindowClose(WindowCloseEvent& e);
+    private:
+        std::unique_ptr<Window> m_Window;
+        ApplicationSpecification m_Specification;
+        bool m_Running = true, m_Minimized = false;
+        LayerStack m_LayerStack;
     };
 
     // Implemented by CLIENT
