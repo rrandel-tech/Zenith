@@ -1,5 +1,19 @@
 cmake_minimum_required(VERSION 3.25...4.0 FATAL_ERROR)
+
+# ==== Configuration Types ====
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR) # Only do this when we're at the top level, see: https://gitlab.kitware.com/cmake/cmake/-/issues/24181
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
+	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+		set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
+	endif()
+endif()
+
 project(Zenith  LANGUAGES C CXX)
+
+set(CMAKE_CXX_FLAGS_DIST           "${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_EXE_LINKER_FLAGS_DIST    "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS_DIST "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 
 if (MSVC)
 	add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)

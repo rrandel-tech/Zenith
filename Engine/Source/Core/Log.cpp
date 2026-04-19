@@ -6,7 +6,7 @@
 
 #include <filesystem>
 
-#define ZN_HAS_CONSOLE
+#define ZN_HAS_CONSOLE !ZN_DIST
 
 namespace Zenith {
 
@@ -28,7 +28,7 @@ namespace Zenith {
 		std::vector<spdlog::sink_ptr> zenithSinks =
 		{
 			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/ZENITH.log", true),
-#ifdef ZN_HAS_CONSOLE
+#if ZN_HAS_CONSOLE
 			std::make_shared<spdlog::sinks::stdout_color_sink_mt>()
 #endif
 		};
@@ -36,7 +36,7 @@ namespace Zenith {
 		std::vector<spdlog::sink_ptr> appSinks =
 		{
 			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/APP.log", true),
-#ifdef ZN_HAS_CONSOLE
+#if ZN_HAS_CONSOLE
 			std::make_shared<spdlog::sinks::stdout_color_sink_mt>()
 #endif
 		};
@@ -44,7 +44,7 @@ namespace Zenith {
 		zenithSinks[0]->set_pattern("[%T] [%l] %n: %v");
 		appSinks[0]->set_pattern("[%T] [%l] %n: %v");
 
-#ifdef ZN_HAS_CONSOLE
+#if ZN_HAS_CONSOLE
 		zenithSinks[1]->set_pattern("%^[%T] %n: %v%$");
 		appSinks[1]->set_pattern("%^[%T] %n: %v%$");
 #endif

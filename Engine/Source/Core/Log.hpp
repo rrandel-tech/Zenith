@@ -10,14 +10,14 @@
 #include <string_view>
 #include <utility>
 
-#ifdef ZN_PLATFORM_WINDOWS
-#define ZN_ASSERT_MESSAGE_BOX
+#if !defined(ZN_DIST) && defined(ZN_PLATFORM_WINDOWS)
+	#define ZN_ASSERT_MESSAGE_BOX 1
+#else
+	#define ZN_ASSERT_MESSAGE_BOX 0
 #endif
 
-#ifdef ZN_ASSERT_MESSAGE_BOX
-	#ifdef ZN_PLATFORM_WINDOWS
-		#include <Windows.h>
-	#endif
+#if ZN_ASSERT_MESSAGE_BOX
+	#include <Windows.h>
 #endif
 
 namespace Zenith {
@@ -232,7 +232,7 @@ namespace Zenith {
 		auto formatted = std::format(message, std::forward<Args>(args)...);
 		logger->error("{0}: {1}", prefix, formatted);
 
-#if defined(ZN_ASSERT_MESSAGE_BOX)
+#if ZN_ASSERT_MESSAGE_BOX
 		MessageBoxA(nullptr, formatted.data(), "Zenith Assert", MB_OK | MB_ICONERROR);
 #endif
 	}
@@ -242,7 +242,7 @@ namespace Zenith {
 	{
 		auto logger = (type == Type::Core) ? GetCoreLogger() : GetClientLogger();
 		logger->error("{0}", prefix);
-#if defined(ZN_ASSERT_MESSAGE_BOX)
+#if ZN_ASSERT_MESSAGE_BOX
 		MessageBoxA(nullptr, "No message :(", "Zenith Assert", MB_OK | MB_ICONERROR);
 #endif
 	}

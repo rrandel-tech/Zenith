@@ -28,6 +28,12 @@ target_precompile_headers(Zenith PRIVATE ${ZENITH_SRC_DIR}/znpch.hpp)
 target_compile_features(Zenith PUBLIC cxx_std_23)
 target_include_directories(Zenith PUBLIC ${ZENITH_SRC_DIR})
 
+target_compile_definitions(Zenith PUBLIC
+        $<$<CONFIG:Debug>:ZN_DEBUG>
+        $<$<CONFIG:Release>:ZN_RELEASE>
+        $<$<CONFIG:Dist>:ZN_DIST>
+)
+
 target_link_libraries(Zenith
         PUBLIC
 

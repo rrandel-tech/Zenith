@@ -123,7 +123,7 @@ namespace Zenith {
         dispatcher.Dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return OnWindowMinimize(e); });
         dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
 
-        ZN_CORE_TRACE("{0}", event.ToString());
+        //ZN_CORE_TRACE("{0}", event.ToString());
     }
 
     bool Application::OnWindowResize(WindowResizeEvent& e)

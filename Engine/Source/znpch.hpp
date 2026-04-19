@@ -1,10 +1,5 @@
 #pragma once
 
-#ifdef VA_PLATFORM_WINDOWS
-#include <Windows.h>
-#include <intrin.h>
-#endif
-
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -61,3 +56,7 @@
 #include <Core/Assert.hpp>
 #include <Events/Event.hpp>
 #include <Core/Log.hpp>
+
+#ifdef ZN_PLATFORM_WINDOWS
+#include <Windows.h>
+#endif

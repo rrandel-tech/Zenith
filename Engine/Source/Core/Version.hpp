@@ -9,6 +9,8 @@
     #define ZN_BUILD_CONFIG_NAME "Debug"
 #elifdef ZN_RELEASE
     #define ZN_BUILD_CONFIG_NAME "Release"
+#elifdef ZN_DIST
+    #define ZN_BUILD_CONFIG_NAME "Dist"
 #else
     #define ZN_BUILD_CONFIG_NAME "Unknown"
 #endif

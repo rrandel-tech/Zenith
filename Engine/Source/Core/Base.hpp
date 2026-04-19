@@ -13,12 +13,6 @@ namespace Zenith {
 #error "Unsupported platform! Zenith supports Windows and Linux."
 #endif
 
-#ifdef NDEBUG
-#define ZN_RELEASE
-#else
-#define ZN_DEBUG
-#endif
-
 #define BIT(x) (1u << x)
 
 //------------------------------------------------------------------------------

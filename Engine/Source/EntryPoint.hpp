@@ -2,6 +2,8 @@
 
 #include "Core/Application.hpp"
 
+#include <Windows.h>
+
 extern Zenith::Application* Zenith::CreateApplication(int argc, char** argv);
 bool g_ApplicationRunning = true;
 
@@ -23,7 +25,7 @@ namespace Zenith {
 
 }
 
-#ifdef ZN_DIST && ZN_PLATFORM_WINDOWS
+#if defined(ZN_DIST) && defined(ZN_PLATFORM_WINDOWS)
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
