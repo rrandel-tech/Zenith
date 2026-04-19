@@ -4,9 +4,11 @@
 
 #include <format>
 
+#include "Core/KeyCodes.hpp"
+
 namespace Zenith {
 
-    class MouseMovedEvent : public Event
+	class MouseMovedEvent : public Event
     {
     public:
         MouseMovedEvent(float x, float y)
@@ -49,25 +51,25 @@ namespace Zenith {
     class MouseButtonEvent : public Event
     {
     public:
-        int GetMouseButton() const { return m_Button; }
+        MouseButton GetMouseButton() const { return m_Button; }
 
         EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
     protected:
-        MouseButtonEvent(int button)
+        MouseButtonEvent(MouseButton button)
             : m_Button(button) {}
 
-        int m_Button;
+        MouseButton m_Button;
     };
 
     class MouseButtonPressedEvent : public MouseButtonEvent
     {
     public:
-        MouseButtonPressedEvent(int button)
+        MouseButtonPressedEvent(MouseButton button)
             : MouseButtonEvent(button) {}
 
         std::string ToString() const override
         {
-            return std::format("MouseButtonPressedEvent: {}", m_Button);
+            return std::format("MouseButtonPressedEvent: {}", static_cast<int>(m_Button));
         }
 
         EVENT_CLASS_TYPE(MouseButtonPressed)
@@ -76,15 +78,28 @@ namespace Zenith {
     class MouseButtonReleasedEvent : public MouseButtonEvent
     {
     public:
-        MouseButtonReleasedEvent(int button)
+        MouseButtonReleasedEvent(MouseButton button)
             : MouseButtonEvent(button) {}
 
         std::string ToString() const override
         {
-            return std::format("MouseButtonReleasedEvent: {}", m_Button);
+            return std::format("MouseButtonReleasedEvent: {}", static_cast<int>(m_Button));
         }
 
         EVENT_CLASS_TYPE(MouseButtonReleased)
     };
 
+    class MouseButtonDownEvent : public MouseButtonEvent
+    {
+    public:
+        MouseButtonDownEvent(MouseButton button)
+            : MouseButtonEvent(button) {}
+
+        std::string ToString() const override
+        {
+            return std::format("MouseButtonDownEvent: {}", static_cast<int>(m_Button));
+        }
+
+        EVENT_CLASS_TYPE(MouseButtonDown)
+    };
 }

@@ -19,31 +19,37 @@ namespace Zenith {
         WindowMode Mode = WindowMode::Windowed;
         bool VSync = true;
         bool Resizable = true;
+        std::string WorkingDirectory;
+        std::filesystem::path IconPath;
     };
 
     class Application
     {
         using EventCallbackFn = std::function<void(Event&)>;
     public:
-        explicit Application(const ApplicationSpecification& specification);
+        Application(const ApplicationSpecification& specification);
         virtual ~Application();
 
         void Run();
         void Close();
 
         virtual void OnInit() {}
+        virtual void OnShutdown();
+        virtual void OnUpdate(Timestep ts) {}
 
-        void OnShutdown();
-
-        void OnUpdate(Timestep ts) {}
-        void OnEvent(Event& event);
+        virtual void OnEvent(Event& event);
 
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* layer);
         void PopLayer(Layer* layer);
         void PopOverlay(Layer* layer);
+        void RenderImGui();
 
         void AddEventCallback(const EventCallbackFn& eventCallback) { m_EventCallbacks.push_back(eventCallback); }
+
+        inline Window& GetWindow() { return *m_Window; }
+
+        static inline Application& Get() { return *s_Instance; }
 
         Timestep GetTimestep() const { return m_TimeStep; }
         Timestep GetFrametime() const { return m_Frametime; }
@@ -52,9 +58,9 @@ namespace Zenith {
         static const char* GetConfigurationName();
         static const char* GetPlatformName();
 
-        [[nodiscard]] const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+        const ApplicationSpecification& GetSpecification() const { return m_Specification; }
     private:
-        void processEvents();
+        void ProcessEvents();
 
         bool OnWindowResize(WindowResizeEvent& e);
         bool OnWindowMinimize(WindowMinimizeEvent& e);
@@ -70,6 +76,8 @@ namespace Zenith {
         float m_LastFrameTime = 0.0f;
 
         std::vector<EventCallbackFn> m_EventCallbacks;
+
+        static Application* s_Instance;
     };
 
     // Implemented by CLIENT

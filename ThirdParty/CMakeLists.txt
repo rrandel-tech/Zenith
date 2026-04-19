@@ -44,6 +44,16 @@ set(GLM_ENABLE_CXX_20 ON)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm SYSTEM)
 
-target_compile_definitions(glm-header-only INTERFACE
-        GLM_FORCE_DEPTH_ZERO_TO_ONE
-)
+target_compile_definitions(glm-header-only INTERFACE GLM_FORCE_DEPTH_ZERO_TO_ONE)
+
+# ==== magic_enum (Header-only) ====
+set(MAGIC_ENUM_OPT_BUILD_EXAMPLES OFF)
+set(MAGIC_ENUM_OPT_BUILD_TESTS    OFF)
+set(MAGIC_ENUM_OPT_INSTALL        OFF)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/magic_enum SYSTEM)
+
+# ==== stb (Single header libraries) ====
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${CMAKE_CURRENT_LIST_DIR}/stb)
+add_library(stb::stb ALIAS stb)

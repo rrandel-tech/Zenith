@@ -15,6 +15,7 @@ namespace Zenith {
 
 	std::map<std::string, Log::TagDetails> Log::s_DefaultTagDetails = {
 		{ "Core",              TagDetails{  true, Level::Trace } },
+		{ "Window",              TagDetails{  true, Level::Error } },
 	};
 
 	void Log::Init()

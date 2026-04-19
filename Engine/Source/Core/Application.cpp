@@ -1,24 +1,38 @@
 #include "znpch.hpp"
 #include "Application.hpp"
 
+#include "Input.hpp"
+
 #include <glm/glm.hpp>
 
+#include <filesystem>
+
+extern bool g_ApplicationRunning;
 namespace Zenith {
+
+    Application* Application::s_Instance = nullptr;
 
     Application::Application(const ApplicationSpecification& specification)
         : m_Specification(specification)
     {
+        s_Instance = this;
+
+        if (!specification.WorkingDirectory.empty())
+            std::filesystem::current_path(specification.WorkingDirectory);
+
         WindowSpecification windowSpec;
         windowSpec.Title = m_Specification.Name;
         windowSpec.Width = m_Specification.WindowWidth;
         windowSpec.Height = m_Specification.WindowHeight;
         windowSpec.Mode = m_Specification.Mode;
-        m_Window = std::unique_ptr(Window::Create(windowSpec));
+        windowSpec.VSync = specification.VSync;
+        windowSpec.IconPath = specification.IconPath;
+        m_Window = std::unique_ptr<Window>(Window::Create(windowSpec));
         m_Window->Init();
         m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
-
         m_Window->SetResizable(m_Specification.Resizable);
-        if (windowSpec.Mode == WindowMode::Windowed)
+
+        if (m_Specification.Mode == WindowMode::Windowed)
             m_Window->CenterWindow();
     }
 
@@ -62,7 +76,7 @@ namespace Zenith {
         OnInit();
         while (m_Running)
         {
-            processEvents();
+            ProcessEvents();
 
             if (!m_Minimized)
             {
@@ -71,6 +85,8 @@ namespace Zenith {
 
                 m_Window->SwapBuffers();
             }
+
+            Input::ClearReleasedKeys();
 
             float time = GetTime();
             m_Frametime = time - m_LastFrameTime;
@@ -88,10 +104,15 @@ namespace Zenith {
 
     void Application::OnShutdown()
     {
+        m_EventCallbacks.clear();
+        g_ApplicationRunning = false;
     }
 
-    void Application::processEvents()
+    void Application::ProcessEvents()
     {
+        Input::TransitionPressedKeys();
+        Input::TransitionPressedButtons();
+
         m_Window->ProcessEvents();
     }
 
@@ -102,26 +123,7 @@ namespace Zenith {
         dispatcher.Dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return OnWindowMinimize(e); });
         dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
 
-        for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
-        {
-            (*--it)->OnEvent(event);
-            if (event.Handled)
-                break;
-        }
-
-        if (event.Handled)
-            return;
-
-        // TODO: Should these callbacks be called BEFORE the layers recieve events?
-        //				We may actually want that since most of these callbacks will be functions REQUIRED in order for the game
-        //				to work, and if a layer has already handled the event we may end up with problems
-        for (auto& eventCallback : m_EventCallbacks)
-        {
-            eventCallback(event);
-
-            if (event.Handled)
-                break;
-        }
+        ZN_CORE_TRACE("{0}", event.ToString());
     }
 
     bool Application::OnWindowResize(WindowResizeEvent& e)

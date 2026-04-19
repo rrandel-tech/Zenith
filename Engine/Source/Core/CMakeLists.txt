@@ -18,6 +18,7 @@ set(CORE_HEADERS
         Log.hpp
         TimeStep.hpp
         Input.hpp
+        KeyCodes.hpp
         Version.hpp
         Window.hpp
 )

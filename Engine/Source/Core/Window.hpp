@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 
 #include <functional>
-#include <memory>
+#include <filesystem>
 
 namespace Zenith {
 
@@ -13,7 +13,8 @@ namespace Zenith {
     {
         Windowed = 0,
         BorderlessFullscreen,
-        ExclusiveFullscreen
+        ExclusiveFullscreen,
+        Maximized
     };
 
     struct WindowSpecification
@@ -22,6 +23,7 @@ namespace Zenith {
         uint32_t Width = 1600, Height = 900;
         WindowMode Mode = WindowMode::Windowed;
         bool VSync = true;
+        std::filesystem::path IconPath;
     };
 
     class Window
@@ -44,7 +46,6 @@ namespace Zenith {
 
         // Window attributes
         void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
-
         void SetVSync(bool enabled);
         bool IsVSync() const;
         void SetResizable(bool resizable) const;
@@ -55,7 +56,9 @@ namespace Zenith {
         const std::string& GetTitle() const { return m_Data.Title; }
         void SetTitle(const std::string& title);
 
-        static std::unique_ptr<Window> Create(const WindowSpecification& specification = WindowSpecification());
+        inline void* GetNativeWindow() const { return m_Window; }
+
+        static Window* Create(const WindowSpecification& specification = WindowSpecification());
     private:
         void PollEvents();
         void Shutdown();

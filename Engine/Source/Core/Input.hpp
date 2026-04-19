@@ -1,20 +1,120 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include "Base.hpp"
+#include "KeyCodes.hpp"
+
+#include <SDL3/SDL_gamepad.h>
+#include "SDL3/SDL_keycode.h"
+
+#include <map>
+#include <string_view>
+#include <vector>
 
 namespace Zenith {
+
+    struct ControllerButtonData
+    {
+        SDL_GamepadButton Button;
+        KeyState State    = KeyState::None;
+        KeyState OldState = KeyState::None;
+    };
+
+    struct Controller
+    {
+        int ID;
+        std::string Name;
+        std::map<SDL_GamepadButton, bool>              ButtonDown;
+        std::map<SDL_GamepadButton, ControllerButtonData> ButtonStates;
+        std::map<SDL_GamepadAxis, float>               AxisStates;
+        std::map<SDL_GamepadAxis, float>               DeadZones;
+    };
+
+    enum class KeyMods : uint16_t
+    {
+        None     = SDL_KMOD_NONE,
+        LShift   = SDL_KMOD_LSHIFT,
+        RShift   = SDL_KMOD_RSHIFT,
+        Shift    = SDL_KMOD_SHIFT,
+        LCtrl    = SDL_KMOD_LCTRL,
+        RCtrl    = SDL_KMOD_RCTRL,
+        Ctrl     = SDL_KMOD_CTRL,
+        LAlt     = SDL_KMOD_LALT,
+        RAlt     = SDL_KMOD_RALT,
+        Alt      = SDL_KMOD_ALT,
+        LSuper   = SDL_KMOD_LGUI,
+        RSuper   = SDL_KMOD_RGUI,
+        Super    = SDL_KMOD_GUI,
+        CapsLock = SDL_KMOD_CAPS,
+        NumLock  = SDL_KMOD_NUM,
+        Scroll   = SDL_KMOD_SCROLL,
+    };
+
+    struct KeyData
+    {
+        KeyCode  Key;
+        KeyState State    = KeyState::None;
+        KeyState OldState = KeyState::None;
+    };
+
+    struct ButtonData
+    {
+        MouseButton Button;
+        KeyState    State    = KeyState::None;
+        KeyState    OldState = KeyState::None;
+    };
 
     class Input
     {
     public:
-        Input() = delete;
+        static void Update();
 
-        static bool IsKeyPressed(SDL_Scancode scancode);
-        static bool IsMouseButtonPressed(int button);
+        static bool IsKeyPressed(KeyCode keycode);
+        static bool IsKeyHeld(KeyCode keycode);
+        static bool IsKeyDown(KeyCode keycode);
+        static bool IsKeyReleased(KeyCode keycode);
+        static bool IsKeyToggledOn(KeyCode keycode);
 
+        static bool  IsMouseButtonPressed(MouseButton button);
+        static bool  IsMouseButtonHeld(MouseButton button);
+        static bool  IsMouseButtonDown(MouseButton button);
+        static bool  IsMouseButtonReleased(MouseButton button);
         static float GetMouseX();
         static float GetMouseY();
-        static void GetMousePosition(float& x, float& y);
+        static std::pair<float, float> GetMousePosition();
+
+        static void       SetCursorMode(CursorMode mode);
+        static CursorMode GetCursorMode();
+
+        // Controllers
+        static bool                    IsControllerPresent(int id);
+        static std::vector<int>        GetConnectedControllerIDs();
+        static const Controller*       GetController(int id);
+        static std::string_view        GetControllerName(int id);
+
+        static bool  IsControllerButtonPressed(int controllerID, SDL_GamepadButton button);
+        static bool  IsControllerButtonHeld(int controllerID, SDL_GamepadButton button);
+        static bool  IsControllerButtonDown(int controllerID, SDL_GamepadButton button);
+        static bool  IsControllerButtonReleased(int controllerID, SDL_GamepadButton button);
+        static float GetControllerAxis(int controllerID, SDL_GamepadAxis axis);
+        static float GetControllerDeadzone(int controllerID, SDL_GamepadAxis axis);
+        static void  SetControllerDeadzone(int controllerID, SDL_GamepadAxis axis, float deadzone);
+
+        static const std::map<int, Controller>& GetControllers() { return s_Controllers; }
+
+        // Internal use only
+        static void TransitionPressedKeys();
+        static void TransitionPressedButtons();
+        static void UpdateKeyState(KeyCode key, KeyState newState);
+        static void UpdateKeyMods(KeyMods mods);
+        static void UpdateButtonState(MouseButton button, KeyState newState);
+        static void UpdateControllerButtonState(int controllerID, SDL_GamepadButton button, KeyState newState);
+        static void ClearReleasedKeys();
+
+    private:
+        inline static std::map<KeyCode, KeyData>       s_KeyData;
+        inline static std::map<MouseButton, ButtonData> s_MouseData;
+        inline static std::map<int, Controller>         s_Controllers;
+        inline static KeyMods                           s_Mods = KeyMods::None;
     };
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Event.hpp"
+#include "Core/KeyCodes.hpp"
 
 #include <format>
 
@@ -9,27 +10,27 @@ namespace Zenith {
     class KeyEvent : public Event
     {
     public:
-        int GetKeyCode() const { return m_KeyCode; }
+        KeyCode GetKeyCode() const { return m_KeyCode; }
 
         EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
     protected:
-        KeyEvent(int keycode)
+        KeyEvent(KeyCode keycode)
             : m_KeyCode(keycode) {}
 
-        int m_KeyCode;
+        KeyCode m_KeyCode;
     };
 
     class KeyPressedEvent : public KeyEvent
     {
     public:
-        KeyPressedEvent(int keycode, int repeatCount)
+        KeyPressedEvent(KeyCode keycode, int repeatCount)
             : KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
         int GetRepeatCount() const { return m_RepeatCount; }
 
         std::string ToString() const override
         {
-            return std::format("KeyPressedEvent: {} ({} repeats)", m_KeyCode, m_RepeatCount);
+            return std::format("KeyPressedEvent: {} ({} repeats)", static_cast<int>(m_KeyCode), m_RepeatCount);
         }
 
         EVENT_CLASS_TYPE(KeyPressed)
@@ -40,12 +41,12 @@ namespace Zenith {
     class KeyReleasedEvent : public KeyEvent
     {
     public:
-        KeyReleasedEvent(int keycode)
+        KeyReleasedEvent(KeyCode keycode)
             : KeyEvent(keycode) {}
 
         std::string ToString() const override
         {
-            return std::format("KeyReleasedEvent: {}", m_KeyCode);
+            return std::format("KeyReleasedEvent: {}", static_cast<int>(m_KeyCode));
         }
 
         EVENT_CLASS_TYPE(KeyReleased)
@@ -54,12 +55,12 @@ namespace Zenith {
     class KeyTypedEvent : public KeyEvent
     {
     public:
-        KeyTypedEvent(int keycode)
+        KeyTypedEvent(KeyCode keycode)
             : KeyEvent(keycode) {}
 
         std::string ToString() const override
         {
-            return std::format("KeyTypedEvent: {}", m_KeyCode);
+            return std::format("KeyTypedEvent: {}", static_cast<int>(m_KeyCode));
         }
 
         EVENT_CLASS_TYPE(KeyTyped)
