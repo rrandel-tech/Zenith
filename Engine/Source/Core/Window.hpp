@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Base.hpp"
 #include "Events/Event.hpp"
 
 #include <SDL3/SDL.h>

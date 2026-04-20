@@ -42,7 +42,7 @@ namespace Zenith {
 
     	SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_GAMEPAD);
 
-    	Uint32 windowFlags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    	Uint32 windowFlags = SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_VULKAN;
 
     	switch (m_Specification.Mode)
     	{

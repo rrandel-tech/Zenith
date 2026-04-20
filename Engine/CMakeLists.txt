@@ -13,6 +13,8 @@ set(VANTA_ROOT_HEADERS
 # ==== Third-party implementation files ====
 set(ZENITH_THIRDPARTY_IMPL_SOURCES
         ${ZENITH_SRC_DIR}/ThirdParty/stb_impl.cpp
+        ${ZENITH_SRC_DIR}/ThirdParty/vma_impl.cpp
+        ${ZENITH_SRC_DIR}/ThirdParty/volk_impl.cpp
 
 )
 
@@ -22,6 +24,9 @@ target_sources(Zenith PRIVATE ${ZENITH_ROOT_SOURCES} ${ZENITH_ROOT_HEADERS} ${ZE
 
 add_subdirectory(${ZENITH_SRC_DIR}/Core)
 add_subdirectory(${ZENITH_SRC_DIR}/Events)
+add_subdirectory(${ZENITH_SRC_DIR}/Math)
+add_subdirectory(${ZENITH_SRC_DIR}/Platform)
+add_subdirectory(${ZENITH_SRC_DIR}/Utilities)
 
 target_precompile_headers(Zenith PRIVATE ${ZENITH_SRC_DIR}/znpch.hpp)
 
@@ -32,6 +37,8 @@ target_compile_definitions(Zenith PUBLIC
         $<$<CONFIG:Debug>:ZN_DEBUG>
         $<$<CONFIG:Release>:ZN_RELEASE>
         $<$<CONFIG:Dist>:ZN_DIST>
+
+        NOMINMAX
 )
 
 target_link_libraries(Zenith
@@ -43,6 +50,11 @@ target_link_libraries(Zenith
         glm::glm-header-only
         magic_enum::magic_enum
         stb::stb
+        volk::volk
+        vma::vma
+        slang::slang
+        fastnoise_lite::fastnoise_lite
+        choc::choc
 )
 
 zenith_enable_lto(Zenith)

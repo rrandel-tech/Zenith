@@ -52,8 +52,8 @@
 #include <functional>
 
 #include <Core/Version.hpp>
-#include <Core/Base.hpp>
 #include <Core/Assert.hpp>
+#include <Core/Base.hpp>
 #include <Events/Event.hpp>
 #include <Core/Log.hpp>
 

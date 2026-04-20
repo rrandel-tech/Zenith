@@ -1,0 +1,40 @@
+#pragma once
+
+#include <string>
+#include <vector>
+
+namespace Zenith {
+    /*
+     * NOTE: At the moment this doesn't support arbitrary-position
+     * 				Parameterless named options
+     * 				(i.e. `git push -f origin' would treat origin as a
+     * 				Parameter to `-f')
+     * 				As it would require an option specifier for the options
+     * 				Whilst retaining raw argument support
+     */
+    class CommandLineParser {
+    public:
+        /// `allow_ms' accepts `/Foo` in addition to `--foo`
+#ifdef ZN_PLATFORM_WINDOWS
+        CommandLineParser(int argc, char** argv, bool allow_ms = true);
+#else
+        CommandLineParser(int argc, char** argv, bool allow_ms = false);
+#endif
+
+        std::vector<std::string_view> GetRawArgs();
+        /// Gets the value passed to a named option
+        /// e.g. `-C foo': `GetOpt("C")' -> `"foo"'
+        /// `opt' is taken in the form *without* the leading `-' or `/'
+        std::string_view GetOpt(const std::string& name);
+        bool HaveOpt(const std::string& name);
+
+    private:
+        struct Opt {
+            bool raw;
+            bool ms;
+            std::string_view name;
+            std::string_view param;
+        };
+        std::vector<Opt> m_Opts;
+    };
+}

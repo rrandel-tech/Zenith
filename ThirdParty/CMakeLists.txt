@@ -21,7 +21,7 @@ set(SDL_AUDIO        OFF)
 set(SDL_CAMERA       OFF)
 set(SDL_SENSOR       OFF)
 set(SDL_POWER        OFF)
-set(SDL_DIALOG       OFF)
+set(SDL_DIALOG       ON)
 set(SDL_TRAY         OFF)
 set(SDL_GPU          OFF)
 set(SDL_RENDER       OFF)
@@ -57,3 +57,55 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/magic_enum SYSTEM)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${CMAKE_CURRENT_LIST_DIR}/stb)
 add_library(stb::stb ALIAS stb)
+
+# =========================
+# Vulkan
+# =========================
+find_package(Vulkan REQUIRED)
+
+# ==== VMA ====
+add_library(vma INTERFACE)
+add_library(vma::vma ALIAS vma)
+target_include_directories(vma INTERFACE
+        "$ENV{VULKAN_SDK}/Include/vma"
+        "$ENV{VULKAN_SDK}/Include"
+)
+target_compile_definitions(vma INTERFACE
+        VMA_STATIC_VULKAN_FUNCTIONS=0
+        VMA_DYNAMIC_VULKAN_FUNCTIONS=1
+)
+
+# ==== volk ====
+add_library(volk INTERFACE)
+add_library(volk::volk ALIAS volk)
+target_include_directories(volk INTERFACE
+        "$ENV{VULKAN_SDK}/Include/Volk"
+        "$ENV{VULKAN_SDK}/Include"
+)
+target_compile_definitions(volk INTERFACE
+        $<$<PLATFORM_ID:Windows>:VK_USE_PLATFORM_WIN32_KHR>
+        $<$<PLATFORM_ID:Linux>:VK_USE_PLATFORM_XLIB_KHR>
+)
+
+# ==== Slang ====
+add_library(slang INTERFACE)
+add_library(slang::slang ALIAS slang)
+target_include_directories(slang INTERFACE "$ENV{VULKAN_SDK}/Include/slang")
+find_library(SLANG_LIB NAMES slang slang.lib
+        HINTS "$ENV{VULKAN_SDK}/Lib" REQUIRED)
+target_link_libraries(slang INTERFACE ${SLANG_LIB}
+)
+
+# ==== FastNoise Lite (Single header library) ====
+add_library(fastnoise_lite INTERFACE)
+target_include_directories(fastnoise_lite INTERFACE ${CMAKE_CURRENT_LIST_DIR}/FastNoiseLite)
+add_library(fastnoise_lite::fastnoise_lite ALIAS fastnoise_lite)
+
+# ==== choc (Tracktion utilities) ====
+add_library(choc INTERFACE)
+
+target_include_directories(choc INTERFACE
+        ${CMAKE_CURRENT_LIST_DIR}/choc
+)
+
+add_library(choc::choc ALIAS choc)

@@ -1,5 +1,7 @@
 #include "EditorLayer.hpp"
 
+#include "Utilities/FileSystem.hpp"
+
 namespace Zenith {
 
     EditorLayer::EditorLayer()

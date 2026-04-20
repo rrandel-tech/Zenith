@@ -71,11 +71,26 @@ namespace Zenith {
         layer->OnDetach();
     }
 
+    void Application::SyncEvents()
+    {
+        std::scoped_lock<std::mutex> lock(m_EventQueueMutex);
+        for (auto& [synced, _] : m_EventQueue)
+        {
+            synced = true;
+        }
+    }
+
     void Application::Run()
     {
         OnInit();
+        m_LastFrameTime = GetTime();
         while (m_Running)
         {
+            float time = GetTime();
+            m_Frametime = time - m_LastFrameTime;
+            m_TimeStep = glm::min<float>(m_Frametime, 0.333f);
+            m_LastFrameTime = time;
+
             ProcessEvents();
 
             if (!m_Minimized)
@@ -88,10 +103,6 @@ namespace Zenith {
 
             Input::ClearReleasedKeys();
 
-            float time = GetTime();
-            m_Frametime = time - m_LastFrameTime;
-            m_TimeStep = glm::min<float>(m_Frametime, 0.333f);
-            m_LastFrameTime = time;
             //ZN_CORE_INFO("Frametime: {:.4f}ms | Timestep: {:.4f}ms | FPS: {:.1f}", m_Frametime * 1000.0f, m_TimeStep  * 1000.0f, 1.0f / m_Frametime);
         }
         OnShutdown();
@@ -114,6 +125,25 @@ namespace Zenith {
         Input::TransitionPressedButtons();
 
         m_Window->ProcessEvents();
+
+        // Note: we have no control over what func() does.  holding this lock while calling func() is a bad idea:
+        // 1) func() might be slow (means we hold the lock for ages)
+        // 2) func() might result in events getting queued, in which case we have a deadlock
+        std::scoped_lock<std::mutex> lock(m_EventQueueMutex);
+
+        // Process custom event queue, up until we encounter an event that is not yet sync'd
+        // If application queues such events, then it is the application's responsibility to call
+        // SyncEvents() at the appropriate time.
+        while (m_EventQueue.size() > 0)
+        {
+            const auto& [synced, func] = m_EventQueue.front();
+            if (!synced)
+            {
+                break;
+            }
+            func();
+            m_EventQueue.pop_front();
+        }
     }
 
     void Application::OnEvent(Event& event)
@@ -124,6 +154,27 @@ namespace Zenith {
         dispatcher.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return OnWindowClose(e); });
 
         //ZN_CORE_TRACE("{0}", event.ToString());
+
+        for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); )
+        {
+            (*--it)->OnEvent(event);
+            if (event.Handled)
+                break;
+        }
+
+        if (event.Handled)
+            return;
+
+        // TODO: Should these callbacks be called BEFORE the layers recieve events?
+        //				We may actually want that since most of these callbacks will be functions REQUIRED in order for the game
+        //				to work, and if a layer has already handled the event we may end up with problems
+        for (auto& eventCallback : m_EventCallbacks)
+        {
+            eventCallback(event);
+
+            if (event.Handled)
+                break;
+        }
     }
 
     bool Application::OnWindowResize(WindowResizeEvent& e)
@@ -143,6 +194,13 @@ namespace Zenith {
         return false; // give other things a chance to react to window close
     }
 
+    float Application::GetTime() const
+    {
+        static const double frequency = (double)SDL_GetPerformanceFrequency();
+        static const double start = (double)SDL_GetPerformanceCounter() / frequency;
+        return (float)((double)SDL_GetPerformanceCounter() / frequency - start);
+    }
+
     const char* Application::GetConfigurationName()
     {
         return ZN_BUILD_CONFIG_NAME;
@@ -151,12 +209,5 @@ namespace Zenith {
     const char* Application::GetPlatformName()
     {
         return ZN_BUILD_PLATFORM_NAME;
-    }
-
-    float Application::GetTime() const
-    {
-        // Returns elapsed seconds since engine start as an absolute timestamp
-        static const uint64_t s_StartTime = SDL_GetTicksNS();
-        return static_cast<float>((SDL_GetTicksNS() - s_StartTime) * 1e-9);
     }
 }

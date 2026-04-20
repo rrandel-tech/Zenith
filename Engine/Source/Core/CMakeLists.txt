@@ -13,6 +13,7 @@ set(CORE_HEADERS
         Application.hpp
         Assert.hpp
         Base.hpp
+        Buffer.hpp
         Layer.hpp
         LayerStack.hpp
         Log.hpp

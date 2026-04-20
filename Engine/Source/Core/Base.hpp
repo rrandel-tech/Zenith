@@ -5,6 +5,10 @@ namespace Zenith {
     void ShutdownCore();
 };
 
+#define BIT(x) (1u << x)
+
+#define ZN_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
 #if defined(_WIN64) || defined(_WIN32)
 #define ZN_PLATFORM_WINDOWS
 #elif defined(__linux__)
@@ -12,8 +16,6 @@ namespace Zenith {
 #else
 #error "Unsupported platform! Zenith supports Windows and Linux."
 #endif
-
-#define BIT(x) (1u << x)
 
 //------------------------------------------------------------------------------
 // Compiler Detection
@@ -27,4 +29,15 @@ namespace Zenith {
 #define ZN_COMPILER_MSVC
 #else
 #error "Unknown compiler! Zenith only supports MSVC, GCC, and Clang."
+#endif
+
+#ifdef ZN_COMPILER_MSVC
+#define ZN_FORCE_INLINE __forceinline
+#define ZN_EXPLICIT_STATIC static
+#elif defined(__GNUC__)
+#define ZN_FORCE_INLINE __attribute__((always_inline)) inline
+#define ZN_EXPLICIT_STATIC
+#else
+#define ZN_FORCE_INLINE inline
+#define ZN_EXPLICIT_STATIC
 #endif
